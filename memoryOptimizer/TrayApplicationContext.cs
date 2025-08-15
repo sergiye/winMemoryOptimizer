@@ -434,11 +434,11 @@ namespace memoryOptimizer {
       };
       for (var i = 1; i <= 24; i++) {
         var interval = i;
-        autoOptimizeEveryMenu.DropDownItems.Add(new ToolStripMenuItem($"{i} hour", null,
+        autoOptimizeEveryMenu.DropDownItems.Add(new ToolStripMenuItem($"{i} hour(s)", null,
           (_, _) => { Settings.AutoOptimizationInterval = interval; }));
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeEveryMenu);
-      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free mem is less than...") {
+      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory is below...") {
         DropDownItems = {
           new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationMemoryUsage = 0; }),
         }

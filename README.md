@@ -1,4 +1,4 @@
-# Memory Optimizer<
+# Memory Optimizer
 
 This free RAM optimizer uses native Windows features to clear and optimize memory areas. Sometimes, programs do not release the allocated memory, making the computer slow. That is when you need to optimize the memory so you can keep working without wasting time restarting your system. 
 
@@ -32,8 +32,7 @@ The app has no UI, just notification icon. It's portable, and you do not need to
 
 ### Settings
 
-- `Auto update` Keeps the app up to date. It checks for updates every 24 hours
-- `Close after optimization` Closes the app after optimization
+- `Auto update` Keeps the app up to date. 
 - `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it
 - `Run on startup` Runs the app after the system boots up. It creates an entry on Windows **Task Scheduler** and Windows Registry path **SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run**
 - `Show optimization notifications` Sends a message to the notification area after optimization. It includes the approximate memory released
@@ -57,23 +56,6 @@ The app has no UI, just notification icon. It's portable, and you do not need to
 
 - `Image` Show app icon
 - `Memory usage` Show physical memory usage with a background color based on the value
-  - `(0% - 79%)` <picture><img src="/.github/images/memory-usage.png"></picture>
-  - `(80% - 89%)` <picture><img src="/.github/images/memory-usage-warning.png"></picture>
-  - `(90% - 100%)` <picture><img src="/.github/images/memory-usage-danger.png"></picture>
-
-## 🔳 Command arguments (NO GUI)
-
-You can use the following arguments to run the app silently.
-
-- `/CombinedPageList`
-- `/ModifiedPageList`
-- `/ProcessesWorkingSet`
-- `/StandbyList` OR `/StandbyListLowPriority`
-- `/SystemWorkingSet`
-
-Shortcut target example
-
-`C:\memoryOptimizer.exe /ModifiedPageList /ProcessesWorkingSet /StandbyList /SystemWorkingSet`
 
 ## 📖 Logs
 
@@ -82,9 +64,6 @@ The app generates logs in the Windows event
 1. Press **Win + R** to open the Run command dialog box
 2. Type **eventvwr** and press **Enter** to open the Event Viewer
 
-<picture>
-  <img src="/.github/images/windows-event-log.png">
-</picture>
 
 ## ❓ Frequently Asked Questions (FAQ)
 
