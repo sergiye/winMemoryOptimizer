@@ -17,13 +17,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\app.ico" />
+    <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\common\sergiye.Common\Extensions\JsonSerializeHelper.cs" Link="Common\JsonSerializeHelper.cs" />
-    <Compile Include="..\..\common\sergiye.Common\Tools\Updater.cs" Link="Common\Updater.cs" />
-    <Compile Include="..\..\common\sergiye.Common\Tools\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />    
-    <Compile Include="..\..\common\sergiye.Common\Win\WinApiHelper.cs" Link="Common\WinApiHelper.cs" />
-    <!-- <Compile Include="..\..\common\sergiye.Common\Win\TaskbarProgressHelper.cs" Link="Common\TaskbarProgressHelper.cs" /> -->
-    <!-- <Compile Include="..\..\common\sergiye.Common\Extensions\ImageExtensions.cs" Link="Common\ImageExtensions.cs" /> -->
+    <PackageReference Include="sergiye.Common" Version="1.*" />
+    <PackageReference Include="Costura.Fody" Version="4.1.0" PrivateAssets="all" />
+    <PackageReference Include="Fody">
+      <Version>6.9.2</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>
