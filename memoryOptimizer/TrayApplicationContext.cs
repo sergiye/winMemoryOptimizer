@@ -18,6 +18,11 @@ namespace memoryOptimizer {
   public class TrayApplicationContext : ApplicationContext {
 
     private readonly IContainer components = new Container();
+#if DEBUG
+    private const int MonitorAppIntervalSeconds = 30;
+#else
+    private const int MonitorAppIntervalSeconds = 60;
+#endif    
     private const int AutoOptimizationMemoryUsageInterval = 5; // Minute
 
     private readonly Icon imageIcon;
@@ -186,8 +191,8 @@ namespace memoryOptimizer {
       optimizationProgressPercentage = (byte) (value * 100 / optimizationProgressTotal);
       // optimizationProgressStep = step;
       // optimizationProgressValue = value;
-      if (Settings.ShowOptimizationNotifications)
-        Notify($"Step: {step}", $"{optimizationProgressPercentage}% optimized", 1, Enums.Icon.Notification.Information);
+      // if (Settings.ShowOptimizationNotifications)
+      //   Notify($"Step: {step}", $"{optimizationProgressPercentage}% optimized", 1, Enums.Icon.Notification.Information);
     }
 
     public Enums.Memory.Areas MemoryAreas {
@@ -336,7 +341,7 @@ namespace memoryOptimizer {
               }
             }
           }
-          Thread.Sleep(10000);
+          Thread.Sleep(MonitorAppIntervalSeconds * 1000);
         }
         catch (Exception ex) {
           Logger.Debug(ex.GetMessage());
