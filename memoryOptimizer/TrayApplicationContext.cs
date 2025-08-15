@@ -426,6 +426,17 @@ namespace memoryOptimizer {
         OptimizeAsync();
       }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+      //settings
+      var iconTypeMenu = new ToolStripMenuItem("Icon type");
+      iconTypeImageMenu = new ToolStripMenuItem("Image", null, (_, _) => {
+        SetIconType(Enums.Icon.Tray.Image);
+      });
+      iconTypeUsageMenu = new ToolStripMenuItem("Memory usage", null, (_, _) => {
+        SetIconType(Enums.Icon.Tray.MemoryUsage);
+      });
+      iconTypeMenu.DropDownItems.Add(iconTypeImageMenu);
+      iconTypeMenu.DropDownItems.Add(iconTypeUsageMenu);
+      notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
       //auto-optimize
       autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every...") {
         DropDownItems = {
@@ -449,20 +460,6 @@ namespace memoryOptimizer {
           (_, _) => { Settings.AutoOptimizationMemoryUsage = percents; }));
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
-      // Checked = Settings.AutoOptimizationMemoryUsage > 0 || Settings.AutoOptimizationInterval > 0,
-
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
-      //settings
-      var iconTypeMenu = new ToolStripMenuItem("Icon type");
-      iconTypeImageMenu = new ToolStripMenuItem("Image", null, (_, _) => {
-        SetIconType(Enums.Icon.Tray.Image);
-      });
-      iconTypeUsageMenu = new ToolStripMenuItem("Memory usage", null, (_, _) => {
-        SetIconType(Enums.Icon.Tray.MemoryUsage);
-      });
-      iconTypeMenu.DropDownItems.Add(iconTypeImageMenu);
-      iconTypeMenu.DropDownItems.Add(iconTypeUsageMenu);
-      notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
 
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
         Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
