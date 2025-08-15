@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Reflection;
@@ -137,9 +138,21 @@ namespace memoryOptimizer {
             if (memory.Physical.Used.Percentage == 0)
               return;
 
-            using (var image = new Bitmap(16, 16))
+            float dpiX, dpiY;
+            using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
+            {
+              dpiX = b.HorizontalResolution;
+              dpiY = b.VerticalResolution;
+            }
+
+            var width = (int)Math.Round(16 * dpiX / 96);
+            var height = (int)Math.Round(16 * dpiY / 96);
+            width = width < 16 ? 16 : width;
+            height = height < 16 ? 16 : height;
+            
+            using (var image = new Bitmap(width, height))
             using (var graphics = Graphics.FromImage(image))
-            using (var font = new Font("Arial", 9F))
+            using (var font = new Font("Arial", 8.0F * dpiX / 96))
             using (var format = new StringFormat()) {
               format.Alignment = StringAlignment.Center;
               format.LineAlignment = StringAlignment.Center;
@@ -151,9 +164,9 @@ namespace memoryOptimizer {
 
               graphics.FillRectangle(
                 memory.Physical.Used.Percentage >= 90 ? Brushes.Red :
-                memory.Physical.Used.Percentage >= 80 ? Brushes.DarkOrange : Brushes.Black, 0, 0, 16, 15);
+                memory.Physical.Used.Percentage >= 80 ? Brushes.DarkOrange : Brushes.Black, 0, 0, image.Width, image.Height);
               graphics.DrawString($"{(memory.Physical.Used.Percentage == 100 ? 0 : memory.Physical.Used.Percentage):00}",
-                font, Brushes.WhiteSmoke, 8, 8, format);
+                font, Brushes.WhiteSmoke, (float)image.Width / 2, (float)image.Height / 2, format);
 
               var handle = image.GetHicon();
               using (var icon = Icon.FromHandle(handle))
