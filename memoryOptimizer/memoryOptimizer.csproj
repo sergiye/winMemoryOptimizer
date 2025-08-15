@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Deterministic>false</Deterministic>
+    <LangVersion>latest</LangVersion>
+    <ApplicationIcon>Properties\app.ico</ApplicationIcon>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Properties\app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\common\sergiye.Common\Extensions\JsonSerializeHelper.cs" Link="Common\JsonSerializeHelper.cs" />
+    <Compile Include="..\..\common\sergiye.Common\Tools\Updater.cs" Link="Common\Updater.cs" />
+    <Compile Include="..\..\common\sergiye.Common\Tools\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />    
+    <Compile Include="..\..\common\sergiye.Common\Win\WinApiHelper.cs" Link="Common\WinApiHelper.cs" />
+    <!-- <Compile Include="..\..\common\sergiye.Common\Win\TaskbarProgressHelper.cs" Link="Common\TaskbarProgressHelper.cs" /> -->
+    <!-- <Compile Include="..\..\common\sergiye.Common\Extensions\ImageExtensions.cs" Link="Common\ImageExtensions.cs" /> -->
+  </ItemGroup>
+</Project>
