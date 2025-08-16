@@ -27,8 +27,7 @@ namespace memoryOptimizer {
     private readonly Computer computer;
     private readonly ComputerService computerService;
     private readonly StartupManager startupManager;
-    private ToolStripMenuItem iconTypeImageMenu;
-    private ToolStripMenuItem iconTypeUsageMenu;
+    private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
     private bool isBusy;
@@ -108,8 +107,8 @@ namespace memoryOptimizer {
         notifyIcon.ContextMenuStrip.Enabled = !running;
     }
 
-    private void Notify(string message, string title = null, int timeout = 5, Enums.Icon.Notification icon = Enums.Icon.Notification.None) {
-      notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, (ToolTipIcon) icon);
+    private void Notify(string message, string title = null, int timeout = 5, ToolTipIcon icon = ToolTipIcon.None) {
+      notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, icon);
     }
 
     private void Update(Memory memory) {
@@ -120,41 +119,56 @@ namespace memoryOptimizer {
         if (memory == null)
           throw new ArgumentNullException("memory");
 
-        notifyIcon.Text = Settings.ShowVirtualMemory
+        var text = Settings.ShowVirtualMemory
           ? $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%"
           : $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
+        // var text = $"Physical: {memory.Physical.Used} / {memory.Physical.Free}";
+        // if (Settings.ShowVirtualMemory)
+        //   text += $"{Environment.NewLine}Virtual: {memory.Virtual.Used} / {memory.Virtual.Free}";
+
+        notifyIcon.Text = text;
       }
-      catch {
-        if (notifyIcon != null)
-          notifyIcon.Text = string.Empty;
+      catch (Exception ex) {
+        notifyIcon.Text = string.Empty;
+        Debug.WriteLine(ex.Message);
       }
 
-      try {
-        switch (Settings.TrayIcon) {
-          case Enums.Icon.Tray.Image:
-            notifyIcon.Icon = imageIcon;
+      var iconValueBrush = memory == null ? Brushes.WhiteSmoke 
+        : memory.Physical.Used.Percentage >= 90 ? Brushes.Red :
+          memory.Physical.Used.Percentage >= 80 ? Brushes.DarkOrange 
+                                                : Brushes.WhiteSmoke;
+      
+      string iconValue = null;
+      if (memory != null) {
+        switch (Settings.TrayIconЬщвуIcon) {
+          case Enums.TrayIconMode.MemoryUsage:
+            iconValue = $"{memory.Physical.Used.Percentage:00}";
             break;
+          case Enums.TrayIconMode.MemoryUsed:
+            iconValue = memory.Physical.Used.Value >= 10 ? $"{memory.Physical.Used.Value:00}" : $"{memory.Physical.Used.Value:0.0}";
+            break;
+          case Enums.TrayIconMode.MemoryAvailable:
+            iconValue = memory.Physical.Free.Value >= 10 ? $"{memory.Physical.Free.Value:00}" : $"{memory.Physical.Free.Value:0.0}";
+            break;
+        }
+      }
 
-          case Enums.Icon.Tray.MemoryUsage:
-            if (memory == null)
-              throw new ArgumentNullException("memory");
-
-            if (memory.Physical.Used.Percentage == 0)
-              return;
-
+      if (string.IsNullOrEmpty(iconValue)) {
+        notifyIcon.Icon = imageIcon;
+      }
+      else {
+        try {
             float dpiX, dpiY;
-            using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
-            {
+            using (var b = new Bitmap(1, 1, PixelFormat.Format32bppArgb)) {
               dpiX = b.HorizontalResolution;
               dpiY = b.VerticalResolution;
             }
-
             var width = Math.Max(16, (int)Math.Round(16 * dpiX / 96));
             var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
-           
+            var fontSize = iconValue.Length > 2 ? 7.0F : 9.0F;
             using (var image = new Bitmap(width, height))
             using (var graphics = Graphics.FromImage(image))
-            using (var font = new Font("Arial", width == 16 ? 9.0F : 8.0F * dpiX / 96))
+            using (var font = new Font("Arial", width == 16 ? fontSize : (fontSize - 1) * dpiX / 96))
             using (var format = new StringFormat()) {
               format.Alignment = StringAlignment.Center;
               format.LineAlignment = StringAlignment.Center;
@@ -164,23 +178,18 @@ namespace memoryOptimizer {
               graphics.SmoothingMode = SmoothingMode.AntiAlias;
               graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
 
-              graphics.FillRectangle(
-                memory.Physical.Used.Percentage >= 90 ? Brushes.Red :
-                memory.Physical.Used.Percentage >= 80 ? Brushes.DarkOrange : Brushes.Black, 0, 0, image.Width, image.Height);
-              graphics.DrawString($"{(memory.Physical.Used.Percentage == 100 ? 0 : memory.Physical.Used.Percentage):00}",
-                font, Brushes.WhiteSmoke, (float)image.Width / 2, (float)image.Height / 2, format);
+              graphics.FillRectangle(Brushes.Transparent, 0, 0, image.Width, image.Height);
+              graphics.DrawString(iconValue, font, iconValueBrush, (float) image.Width / 2, (float) image.Height / 2, format);
 
               var handle = image.GetHicon();
               using (var icon = Icon.FromHandle(handle))
                 notifyIcon.Icon = (Icon) icon.Clone();
               NativeMethods.DestroyIcon(handle);
             }
-            break;
         }
-      }
-      catch {
-        if (notifyIcon != null)
+        catch {
           notifyIcon.Icon = imageIcon;
+        }
       }
     }
 
@@ -449,15 +458,14 @@ namespace memoryOptimizer {
         Checked = startupManager.Startup,
       });
       //settings
-      var iconTypeMenu = new ToolStripMenuItem("Icon type");
-      iconTypeImageMenu = new ToolStripMenuItem("Image", null, (_, _) => {
-        SetIconType(Enums.Icon.Tray.Image);
-      });
-      iconTypeUsageMenu = new ToolStripMenuItem("Memory usage", null, (_, _) => {
-        SetIconType(Enums.Icon.Tray.MemoryUsage);
-      });
-      iconTypeMenu.DropDownItems.Add(iconTypeImageMenu);
-      iconTypeMenu.DropDownItems.Add(iconTypeUsageMenu);
+      iconTypeMenu = new ToolStripMenuItem("Icon type") {
+        DropDownItems = {
+          new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
+          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsage); }),
+          new ToolStripMenuItem("Memory available", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryAvailable); }),
+          new ToolStripMenuItem("Memory used", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsed); }),
+        }
+      };
       notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
       //auto-optimize
       autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every...") {
@@ -504,16 +512,16 @@ namespace memoryOptimizer {
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => { ExitThread(); }));
     }
 
-    private void SetIconType(Enums.Icon.Tray tray, bool update = true) {
-      Settings.TrayIcon = tray;
-      if (update)
-        Update(computer.Memory);
+    private void SetIconType(Enums.TrayIconMode trayIconЬщву) {
+      Settings.TrayIconЬщвуIcon = trayIconЬщву;
+      Update(computer.Memory);
     }
     
     private void OnContextMenuStripOpening(object sender, CancelEventArgs e) {
-      
-      iconTypeImageMenu.Checked = Settings.TrayIcon == Enums.Icon.Tray.Image;
-      iconTypeUsageMenu.Checked = Settings.TrayIcon == Enums.Icon.Tray.MemoryUsage;
+
+      foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
+        ((ToolStripMenuItem) iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconЬщвуIcon == trayType;
+      }
       for (var i = 0; i <=24; i ++)
         ((ToolStripMenuItem) autoOptimizeEveryMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationInterval == i;
       for (var i = 0; i < 10; i ++)

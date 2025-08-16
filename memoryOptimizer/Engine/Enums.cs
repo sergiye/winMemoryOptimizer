@@ -4,14 +4,12 @@ namespace memoryOptimizer {
 
   internal static class Enums {
     
-    public static class Log {
-      [Flags]
-      public enum Levels {
-        Debug = 1,
-        Information = 2,
-        Warning = 4,
-        Error = 8
-      }
+    [Flags]
+    public enum LogLevels {
+      Debug = 1,
+      Information = 2,
+      Warning = 4,
+      Error = 8
     }
 
     public static class Memory {
@@ -39,18 +37,11 @@ namespace memoryOptimizer {
       }
     }
 
-    public static class Icon {
-      public enum Notification {
-        None,
-        Information,
-        Warning,
-        Error
-      }
-
-      public enum Tray {
-        Image,
-        MemoryUsage
-      }
+    public enum TrayIconMode {
+      Image,
+      MemoryUsage,
+      MemoryAvailable,
+      MemoryUsed,
     }
 
     public enum Priority {
