@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace memoryOptimizer {
 
-  public static class ExtensionMethods {
+  internal static class ExtensionMethods {
 
     public static string GetMessage(this Exception value) {
       var exception = value;

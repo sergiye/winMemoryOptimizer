@@ -5,20 +5,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
-using memoryOptimizer.Model.Memory;
-using OperatingSystem = memoryOptimizer.Model.OperatingSystem;
 
-namespace memoryOptimizer.Service {
+namespace memoryOptimizer {
   
-  public class ComputerService {
-    
-    private Memory memory = new Memory(new Structs.Windows.MemoryStatusEx());
+  internal class ComputerService {
+
+    private Memory memory = new Memory(new WindowsStructs.MemoryStatusEx());
     private OperatingSystem operatingSystem;
 
     public Memory Memory {
       get {
         try {
-          var memoryStatusEx = new Structs.Windows.MemoryStatusEx();
+          var memoryStatusEx = new WindowsStructs.MemoryStatusEx();
 
           if (!NativeMethods.GlobalMemoryStatusEx(memoryStatusEx))
             Logger.Error(new Win32Exception(Marshal.GetLastWin32Error()));
@@ -47,7 +45,7 @@ namespace memoryOptimizer.Service {
       var result = false;
 
       using (var current = WindowsIdentity.GetCurrent(TokenAccessLevels.Query | TokenAccessLevels.AdjustPrivileges)) {
-        Structs.Windows.TokenPrivileges newState;
+        WindowsStructs.TokenPrivileges newState;
         newState.Count = 1;
         newState.Luid = 0L;
         newState.Attr = Constants.Windows.PrivilegeAttribute.Enabled;
@@ -228,7 +226,7 @@ namespace memoryOptimizer.Service {
 
       var handle = GCHandle.Alloc(0);
       try {
-        var memoryCombineInformationEx = new Structs.Windows.MemoryCombineInformationEx();
+        var memoryCombineInformationEx = new WindowsStructs.MemoryCombineInformationEx();
         handle = GCHandle.Alloc(memoryCombineInformationEx, GCHandleType.Pinned);
         var length = Marshal.SizeOf(memoryCombineInformationEx);
         if (NativeMethods.NtSetSystemInformation(
@@ -348,10 +346,10 @@ namespace memoryOptimizer.Service {
         object systemCacheInformation;
 
         if (OperatingSystem.Is64Bit)
-          systemCacheInformation = new Structs.Windows.SystemCacheInformation64
+          systemCacheInformation = new WindowsStructs.SystemCacheInformation64
             {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
         else
-          systemCacheInformation = new Structs.Windows.SystemCacheInformation32
+          systemCacheInformation = new WindowsStructs.SystemCacheInformation32
             {MinimumWorkingSet = uint.MaxValue, MaximumWorkingSet = uint.MaxValue};
 
         handle = GCHandle.Alloc(systemCacheInformation, GCHandleType.Pinned);

@@ -11,3 +11,4 @@
 *.DotSettings.user
 .idea/
 /memoryOptimizer/FodyWeavers.xsd
+*.DotSettings

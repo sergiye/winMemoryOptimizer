@@ -2,7 +2,7 @@
 
 namespace memoryOptimizer {
 
-  public static class Enums {
+  internal static class Enums {
     
     public static class Log {
       [Flags]

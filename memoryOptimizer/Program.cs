@@ -8,12 +8,14 @@ namespace memoryOptimizer {
     
     public static void Main(string[] args) {
       
+      Crasher.Listen();
+
       try {
 
         if (!OperatingSystemHelper.IsCompatible(true, out var errorMessage, out var fixAction)) {
           if (fixAction != null) {
             if (MessageBox.Show(errorMessage, Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
-              fixAction?.Invoke();
+              fixAction.Invoke();
             }
           }
           else {
@@ -29,7 +31,7 @@ namespace memoryOptimizer {
         }
 
         if (Environment.Is64BitOperatingSystem != Environment.Is64BitProcess) {
-          if (MessageBox.Show($"You are running an application build made for a different OS architecture.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+          if (MessageBox.Show("You are running an application build made for a different OS architecture.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
             Updater.VisitAppSite("releases");
           }
           Environment.Exit(0);

@@ -8,7 +8,7 @@ namespace memoryOptimizer {
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool AdjustTokenPrivileges(IntPtr tokenHandle,
-      [MarshalAs(UnmanagedType.Bool)] bool disableAllPrivileges, ref Structs.Windows.TokenPrivileges newState,
+      [MarshalAs(UnmanagedType.Bool)] bool disableAllPrivileges, ref WindowsStructs.TokenPrivileges newState,
       int bufferLength, IntPtr previousState, IntPtr returnLength);
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -20,7 +20,7 @@ namespace memoryOptimizer {
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool GlobalMemoryStatusEx([In, Out] Structs.Windows.MemoryStatusEx lpBuffer);
+    internal static extern bool GlobalMemoryStatusEx([In, Out] WindowsStructs.MemoryStatusEx lpBuffer);
 
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -1,6 +1,6 @@
-﻿namespace memoryOptimizer.Model.Memory {
+﻿namespace memoryOptimizer {
 
-  public class MemorySize {
+  internal class MemorySize {
   
     public MemorySize(ulong bytes) {
       Bytes = bytes;

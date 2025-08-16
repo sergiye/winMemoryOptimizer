@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using memoryOptimizer.Model;
 using sergiye.Common;
 
 namespace memoryOptimizer {
   
-  public static class Logger {
+  internal static class Logger {
     
     private static readonly Enums.Log.Levels level = Enums.Log.Levels.Debug | Enums.Log.Levels.Information |
                                                      Enums.Log.Levels.Warning | Enums.Log.Levels.Error;

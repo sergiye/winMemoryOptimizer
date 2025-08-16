@@ -5,7 +5,7 @@ using Microsoft.Win32;
 
 namespace memoryOptimizer {
 
-  public static class Settings {
+  internal static class Settings {
   
     static Settings() {
       AutoOptimizationInterval = 0;
@@ -92,8 +92,7 @@ namespace memoryOptimizer {
           key.SetValue(Constants.App.Registry.Name.AutoOptimizationMemoryUsage, AutoOptimizationMemoryUsage);
           key.SetValue(Constants.App.Registry.Name.MemoryAreas, (int) MemoryAreas);
           key.SetValue(Constants.App.Registry.Name.RunOnPriority, (int) RunOnPriority);
-          key.SetValue(Constants.App.Registry.Name.ShowOptimizationNotifications,
-            ShowOptimizationNotifications ? 1 : 0);
+          key.SetValue(Constants.App.Registry.Name.ShowOptimizationNotifications, ShowOptimizationNotifications ? 1 : 0);
           key.SetValue(Constants.App.Registry.Name.ShowVirtualMemory, ShowVirtualMemory ? 1 : 0);
           key.SetValue(Constants.App.Registry.Name.TrayIcon, (int) TrayIcon);
         }

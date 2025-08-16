@@ -1,6 +1,6 @@
-﻿namespace memoryOptimizer.Model {
+﻿namespace memoryOptimizer {
 
-  public class OperatingSystem {
+  internal class OperatingSystem {
 
     public bool HasCombinedPageList => IsWindows8OrGreater;
     public bool HasModifiedPageList => IsWindowsVistaOrGreater;

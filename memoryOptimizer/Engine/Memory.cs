@@ -1,15 +1,15 @@
 ﻿using System;
 
-namespace memoryOptimizer.Model.Memory {
+namespace memoryOptimizer {
   
-  public class Memory {
+  internal class Memory {
     
     public Memory() {
       Physical = new MemoryStats(0, 0, 0);
       Virtual = new MemoryStats(0, 0, 0);
     }
 
-    public Memory(Structs.Windows.MemoryStatusEx memoryStatusEx) {
+    public Memory(WindowsStructs.MemoryStatusEx memoryStatusEx) {
       if (memoryStatusEx == null)
         throw new ArgumentNullException("memoryStatusEx");
 

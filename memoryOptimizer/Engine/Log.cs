@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace memoryOptimizer.Model {
+namespace memoryOptimizer {
 
-  public class Log {
+  internal class Log {
 
     public DateTime DateTime { get; set; }
     public Enums.Log.Levels Level { get; set; }

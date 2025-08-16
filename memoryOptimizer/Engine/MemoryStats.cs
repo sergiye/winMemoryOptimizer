@@ -1,6 +1,6 @@
-﻿namespace memoryOptimizer.Model.Memory {
+﻿namespace memoryOptimizer {
 
-  public class MemoryStats {
+  internal class MemoryStats {
   
     public MemoryStats(ulong free, ulong total, uint? used = null) {
       Free = new MemorySize(free);

@@ -1,21 +1,18 @@
-﻿using memoryOptimizer.Model;
-using memoryOptimizer.Service;
-using sergiye.Common;
+﻿using sergiye.Common;
 using System;
-using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace memoryOptimizer {
-  public class TrayApplicationContext : ApplicationContext {
+  
+  internal class TrayApplicationContext : ApplicationContext {
 
     private readonly IContainer components = new Container();
 #if DEBUG
@@ -29,6 +26,7 @@ namespace memoryOptimizer {
     private readonly NotifyIcon notifyIcon;
     private readonly Computer computer;
     private readonly ComputerService computerService;
+    private readonly StartupManager startupManager;
     private ToolStripMenuItem iconTypeImageMenu;
     private ToolStripMenuItem iconTypeUsageMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
@@ -41,8 +39,8 @@ namespace memoryOptimizer {
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
 
-    private byte optimizationProgressTotal = byte.MaxValue;
-    private byte optimizationProgressPercentage;
+    // private byte optimizationProgressTotal = byte.MaxValue;
+    // private byte optimizationProgressPercentage;
     // private byte optimizationProgressValue = byte.MinValue;
     // private string optimizationProgressStep = "Optimize";
 
@@ -77,6 +75,7 @@ namespace memoryOptimizer {
       timer.Interval = 3000;
       timer.Enabled = true;
 
+      startupManager = new StartupManager();
       computerService = new ComputerService();
       computerService.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
       computer = new Computer {
@@ -113,7 +112,7 @@ namespace memoryOptimizer {
       notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, (ToolTipIcon) icon);
     }
 
-    private void Update(Model.Memory.Memory memory) {
+    private void Update(Memory memory) {
       if (notifyIcon == null)
         return;
 
@@ -150,14 +149,12 @@ namespace memoryOptimizer {
               dpiY = b.VerticalResolution;
             }
 
-            var width = (int)Math.Round(16 * dpiX / 96);
-            var height = (int)Math.Round(16 * dpiY / 96);
-            width = width < 16 ? 16 : width;
-            height = height < 16 ? 16 : height;
-            
+            var width = Math.Max(16, (int)Math.Round(16 * dpiX / 96));
+            var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
+           
             using (var image = new Bitmap(width, height))
             using (var graphics = Graphics.FromImage(image))
-            using (var font = new Font("Arial", 8.0F * dpiX / 96))
+            using (var font = new Font("Arial", width == 16 ? 9.0F : 8.0F * dpiX / 96))
             using (var format = new StringFormat()) {
               format.Alignment = StringAlignment.Center;
               format.LineAlignment = StringAlignment.Center;
@@ -188,7 +185,7 @@ namespace memoryOptimizer {
     }
 
     private void OnOptimizeProgressUpdate(byte value, string step) {
-      optimizationProgressPercentage = (byte) (value * 100 / optimizationProgressTotal);
+      // optimizationProgressPercentage = (byte) (value * 100 / optimizationProgressTotal);
       // optimizationProgressStep = step;
       // optimizationProgressValue = value;
       // if (Settings.ShowOptimizationNotifications)
@@ -426,7 +423,7 @@ namespace memoryOptimizer {
       try {
         // optimizationProgressStep = "Optimize";
         // optimizationProgressValue = 0;
-        optimizationProgressTotal = (byte) (new BitArray(new[] {(int) Settings.MemoryAreas}).OfType<bool>().Count(x => x) + 1);
+        // optimizationProgressTotal = (byte) (new BitArray(new[] {(int) Settings.MemoryAreas}).OfType<bool>().Count(x => x) + 1);
 
         using (var worker = new BackgroundWorker()) {
           worker.DoWork += Optimize;
@@ -444,6 +441,13 @@ namespace memoryOptimizer {
         OptimizeAsync();
       }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+      //auto-start
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto-start application", null, (sender, _) => {
+        startupManager.Startup = !startupManager.Startup;
+        ((ToolStripMenuItem) sender).Checked = startupManager.Startup;
+      }) {
+        Checked = startupManager.Startup,
+      });
       //settings
       var iconTypeMenu = new ToolStripMenuItem("Icon type");
       iconTypeImageMenu = new ToolStripMenuItem("Image", null, (_, _) => {

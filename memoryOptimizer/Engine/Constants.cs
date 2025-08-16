@@ -1,6 +1,6 @@
 ﻿namespace memoryOptimizer {
   
-  public static class Constants {
+  internal static class Constants {
     
     public static class App {
       
