@@ -30,6 +30,7 @@ namespace memoryOptimizer {
     private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
+    private Brush iconValueBrush;
     private bool isBusy;
 
     private BackgroundWorker monitorAppWorker;
@@ -59,10 +60,8 @@ namespace memoryOptimizer {
           MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OK,
             isError ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
         },
-        (message) => {
-          return MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OKCancel,
-            MessageBoxIcon.Question) == DialogResult.OK;
-        },
+        message => MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OKCancel,
+          MessageBoxIcon.Question) == DialogResult.OK,
         Application.Exit
       );
 
@@ -80,6 +79,8 @@ namespace memoryOptimizer {
       computer = new Computer {
         OperatingSystem = computerService.OperatingSystem
       };
+      iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
+
       MonitorAsync();
 
       AddMenuItems();
@@ -103,7 +104,7 @@ namespace memoryOptimizer {
 
     private void Loading(bool running) {
       //Mouse.OverrideCursor = running ? Cursors.Wait : null;
-      if (notifyIcon != null && notifyIcon.ContextMenuStrip != null)
+      if (notifyIcon?.ContextMenuStrip != null)
         notifyIcon.ContextMenuStrip.Enabled = !running;
     }
 
@@ -111,17 +112,17 @@ namespace memoryOptimizer {
       notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, icon);
     }
 
-    private void Update(Memory memory) {
+    private void Update() {
       if (notifyIcon == null)
         return;
 
       try {
-        if (memory == null)
-          throw new ArgumentNullException("memory");
+        if (computer?.Memory == null)
+          throw new ArgumentNullException(nameof(computer.Memory));
 
         var text = Settings.ShowVirtualMemory
-          ? $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%"
-          : $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
+          ? $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%"
+          : $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
         // var text = $"Physical: {memory.Physical.Used} / {memory.Physical.Free}";
         // if (Settings.ShowVirtualMemory)
         //   text += $"{Environment.NewLine}Virtual: {memory.Virtual.Used} / {memory.Virtual.Free}";
@@ -133,22 +134,17 @@ namespace memoryOptimizer {
         Debug.WriteLine(ex.Message);
       }
 
-      var iconValueBrush = memory == null ? Brushes.WhiteSmoke 
-        : memory.Physical.Used.Percentage >= 90 ? Brushes.Red :
-          memory.Physical.Used.Percentage >= 80 ? Brushes.DarkOrange 
-                                                : Brushes.WhiteSmoke;
-      
       string iconValue = null;
-      if (memory != null) {
-        switch (Settings.TrayIconЬщвуIcon) {
+      if (computer?.Memory != null) {
+        switch (Settings.TrayIconMode) {
           case Enums.TrayIconMode.MemoryUsage:
-            iconValue = $"{memory.Physical.Used.Percentage:00}";
+            iconValue = $"{computer.Memory.Physical.Used.Percentage:00}";
             break;
           case Enums.TrayIconMode.MemoryUsed:
-            iconValue = memory.Physical.Used.Value >= 10 ? $"{memory.Physical.Used.Value:00}" : $"{memory.Physical.Used.Value:0.0}";
+            iconValue = computer.Memory.Physical.Used.Value >= 10 ? $"{computer.Memory.Physical.Used.Value:00}" : $"{computer.Memory.Physical.Used.Value:0.0}";
             break;
           case Enums.TrayIconMode.MemoryAvailable:
-            iconValue = memory.Physical.Free.Value >= 10 ? $"{memory.Physical.Free.Value:00}" : $"{memory.Physical.Free.Value:0.0}";
+            iconValue = computer.Memory.Physical.Free.Value >= 10 ? $"{computer.Memory.Physical.Free.Value:00}" : $"{computer.Memory.Physical.Free.Value:0.0}";
             break;
         }
       }
@@ -386,7 +382,7 @@ namespace memoryOptimizer {
           if (IsBusy)
             continue;
           computer.Memory = computerService.Memory;
-          Update(computer.Memory);
+          Update();
           Thread.Sleep(5000);
         }
         catch (Exception ex) {
@@ -457,16 +453,6 @@ namespace memoryOptimizer {
       }) {
         Checked = startupManager.Startup,
       });
-      //settings
-      iconTypeMenu = new ToolStripMenuItem("Icon type") {
-        DropDownItems = {
-          new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
-          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsage); }),
-          new ToolStripMenuItem("Memory available", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryAvailable); }),
-          new ToolStripMenuItem("Memory used", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsed); }),
-        }
-      };
-      notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
       //auto-optimize
       autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every...") {
         DropDownItems = {
@@ -491,6 +477,7 @@ namespace memoryOptimizer {
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
 
+      //settings
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
         Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
         ((ToolStripMenuItem) sender).Checked = Settings.ShowOptimizationNotifications;
@@ -503,6 +490,24 @@ namespace memoryOptimizer {
       }) {
         Checked = Settings.ShowVirtualMemory,
       });
+      iconTypeMenu = new ToolStripMenuItem("Icon type") {
+        DropDownItems = {
+          new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
+          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsage); }),
+          new ToolStripMenuItem("Memory available", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryAvailable); }),
+          new ToolStripMenuItem("Memory used", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsed); }),
+        }
+      };
+      notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Set icon color...", null, (_, _) => {
+        using (var dialog = new ColorDialog()) {
+          dialog.Color = Settings.TrayIconValueColor;
+          if (dialog.ShowDialog() != DialogResult.OK) return;
+          Settings.TrayIconValueColor = dialog.Color;
+          iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
+          Update();
+        }
+      }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
       //about
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Check for updates", null,
@@ -513,14 +518,14 @@ namespace memoryOptimizer {
     }
 
     private void SetIconType(Enums.TrayIconMode trayIconЬщву) {
-      Settings.TrayIconЬщвуIcon = trayIconЬщву;
-      Update(computer.Memory);
+      Settings.TrayIconMode = trayIconЬщву;
+      Update();
     }
     
     private void OnContextMenuStripOpening(object sender, CancelEventArgs e) {
 
       foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
-        ((ToolStripMenuItem) iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconЬщвуIcon == trayType;
+        ((ToolStripMenuItem) iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconMode == trayType;
       }
       for (var i = 0; i <=24; i ++)
         ((ToolStripMenuItem) autoOptimizeEveryMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationInterval == i;

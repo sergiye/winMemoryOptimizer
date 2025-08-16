@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Microsoft.Win32;
 
@@ -17,7 +18,8 @@ namespace memoryOptimizer {
       RunOnPriority = Enums.Priority.Low;
       ShowOptimizationNotifications = true;
       ShowVirtualMemory = true;
-      TrayIconЬщвуIcon = Enums.TrayIconMode.Image;
+      TrayIconMode = Enums.TrayIconMode.Image;
+      TrayIconValueColor = Color.WhiteSmoke;
 
       try {
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.App.Registry.Key.ProcessExclusionList)) {
@@ -50,9 +52,11 @@ namespace memoryOptimizer {
           ShowOptimizationNotifications = Convert.ToBoolean(key.GetValue(Constants.App.Registry.Name.ShowOptimizationNotifications, ShowOptimizationNotifications));
           ShowVirtualMemory = Convert.ToBoolean(key.GetValue(Constants.App.Registry.Name.ShowVirtualMemory, ShowVirtualMemory));
 
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.App.Registry.Name.TrayIcon, TrayIconЬщвуIcon)),
+          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.App.Registry.Name.TrayIcon, TrayIconMode)),
                 out Enums.TrayIconMode trayIcon) && trayIcon.IsValid())
-            TrayIconЬщвуIcon = trayIcon;
+            TrayIconMode = trayIcon;
+
+          TrayIconValueColor = Color.FromArgb(Convert.ToInt32(key.GetValue(Constants.App.Registry.Name.TrayIconValueColor, 0)));
         }
       }
       catch (Exception e) {
@@ -70,7 +74,8 @@ namespace memoryOptimizer {
     public static Enums.Priority RunOnPriority { get; set; }
     public static bool ShowOptimizationNotifications { get; set; }
     public static bool ShowVirtualMemory { get; set; }
-    public static Enums.TrayIconMode TrayIconЬщвуIcon { get; set; }
+    public static Enums.TrayIconMode TrayIconMode { get; set; }
+    public static Color TrayIconValueColor { get; set; }
 
     public static void Save() {
       try {
@@ -94,7 +99,8 @@ namespace memoryOptimizer {
           key.SetValue(Constants.App.Registry.Name.RunOnPriority, (int) RunOnPriority);
           key.SetValue(Constants.App.Registry.Name.ShowOptimizationNotifications, ShowOptimizationNotifications ? 1 : 0);
           key.SetValue(Constants.App.Registry.Name.ShowVirtualMemory, ShowVirtualMemory ? 1 : 0);
-          key.SetValue(Constants.App.Registry.Name.TrayIcon, (int) TrayIconЬщвуIcon);
+          key.SetValue(Constants.App.Registry.Name.TrayIcon, (int) TrayIconMode);
+          key.SetValue(Constants.App.Registry.Name.TrayIconValueColor, TrayIconValueColor.ToArgb());
         }
       }
       catch (Exception e) {

@@ -18,6 +18,7 @@
           public const string ShowOptimizationNotifications = "ShowOptimizationNotifications";
           public const string ShowVirtualMemory = "ShowVirtualMemory";
           public const string TrayIcon = "TrayIcon";
+          public const string TrayIconValueColor = "TrayIconValueColor";
         }
       }
     }
