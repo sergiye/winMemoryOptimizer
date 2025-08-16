@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace memoryOptimizer {
@@ -32,6 +33,11 @@ namespace memoryOptimizer {
         return new KeyValuePair<double, Enums.Memory.Unit>(value, Enums.Memory.Unit.B);
       var mag = (int) Math.Log(value, 1024);
       return new KeyValuePair<double, Enums.Memory.Unit>(value / Math.Pow(1024, mag), (Enums.Memory.Unit) mag);
+    }
+
+    public static bool IsDark(this Color color) {
+      var brightness = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B);
+      return brightness < 186;
     }
   }
 }

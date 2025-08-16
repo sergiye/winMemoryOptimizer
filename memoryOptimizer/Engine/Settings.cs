@@ -19,7 +19,8 @@ namespace memoryOptimizer {
       ShowOptimizationNotifications = true;
       ShowVirtualMemory = true;
       TrayIconMode = Enums.TrayIconMode.Image;
-      TrayIconValueColor = Color.WhiteSmoke;
+      var taskbarColor = NativeMethods.GetTaskbarColor(); 
+      TrayIconValueColor = taskbarColor.IsDark() ? Color.White : Color.Black;
 
       try {
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.App.Registry.Key.ProcessExclusionList)) {

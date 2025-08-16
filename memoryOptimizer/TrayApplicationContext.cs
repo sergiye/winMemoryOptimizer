@@ -54,6 +54,8 @@ namespace memoryOptimizer {
       };
       notifyIcon.ContextMenuStrip.Opening += OnContextMenuStripOpening;
       notifyIcon.MouseUp += OnNotifyIconMouseUp;
+      notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
+      iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
 
       Updater.Subscribe(
         (message, isError) => {
@@ -79,11 +81,11 @@ namespace memoryOptimizer {
       computer = new Computer {
         OperatingSystem = computerService.OperatingSystem
       };
-      iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
-
-      MonitorAsync();
 
       AddMenuItems();
+      Theme.SetAutoTheme();
+
+      MonitorAsync();
     }
 
     public event Action OnOptimizeCommandCompleted;
