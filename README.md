@@ -14,6 +14,10 @@ Here's a preview of the app's UI running on Windows 10:
 
 [<img src="https://github.com/sergiye/memoryOptimizer/raw/master/preview.png" alt="preview"/>](https://github.com/sergiye/memoryOptimizer/raw/master/preview.png)
 
+and a preview of the app notification after optimization completed:
+
+[<img src="https://github.com/sergiye/memoryOptimizer/raw/master/preview_notification.png" alt="preview_notification"/>](https://github.com/sergiye/memoryOptimizer/raw/master/preview_notification.png)
+
 ## Download Latest Version
 
 The published version can be obtained from [releases](https://github.com/sergiye/memoryOptimizer/releases) page, or get the newer one directly from:
