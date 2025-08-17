@@ -26,7 +26,10 @@ namespace memoryOptimizer {
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
     private ToolStripMenuItem updateIntervalMenu;
-    private Brush iconValueBrush;
+    private readonly Bitmap bitmap;
+    private readonly Graphics graphics;
+    private readonly Font font;
+    private readonly Font smallFont;
     private bool isBusy;
 
     private BackgroundWorker monitorAppWorker;
@@ -51,8 +54,25 @@ namespace memoryOptimizer {
       notifyIcon.ContextMenuStrip.Opening += OnContextMenuStripOpening;
       notifyIcon.MouseUp += OnNotifyIconMouseUp;
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
-      iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
 
+      float dpiX, dpiY;
+      using (var b = new Bitmap(1, 1, PixelFormat.Format32bppArgb)) {
+        dpiX = b.HorizontalResolution;
+        dpiY = b.VerticalResolution;
+      }
+      var width = Math.Max(16, (int)Math.Round(16 * dpiX / 96));
+      var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
+      bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+      graphics = Graphics.FromImage(bitmap);
+      if (Environment.OSVersion.Version.Major > 5) {
+        graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+      }
+      font = new Font("Arial", width == 16 ? 9.0F : 8.0F * dpiX / 96);
+      smallFont = new Font("Arial", width == 16 ? 7.0F : 6.0F * dpiX / 96);
+      
       Updater.Subscribe(
         (message, isError) => {
           MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OK,
@@ -62,14 +82,6 @@ namespace memoryOptimizer {
           MessageBoxIcon.Question) == DialogResult.OK,
         Application.Exit
       );
-
-      var timer = new System.Windows.Forms.Timer(components);
-      timer.Tick += async (_, _) => {
-        timer.Enabled = false;
-        timer.Enabled = !await Updater.CheckForUpdatesAsync(true);
-      };
-      timer.Interval = 3000;
-      timer.Enabled = true;
 
       startupManager = new StartupManager();
       computerService = new ComputerService();
@@ -83,8 +95,6 @@ namespace memoryOptimizer {
 
       MonitorAsync();
     }
-
-    public event Action OnOptimizeCommandCompleted;
 
     public bool IsBusy {
       get => isBusy;
@@ -152,34 +162,37 @@ namespace memoryOptimizer {
       }
       else {
         try {
-            float dpiX, dpiY;
-            using (var b = new Bitmap(1, 1, PixelFormat.Format32bppArgb)) {
-              dpiX = b.HorizontalResolution;
-              dpiY = b.VerticalResolution;
+            var small = iconValue.Length > 2;
+            graphics.Clear(Color.Transparent);
+            var color = Settings.TrayIconValueColor;
+            var defaultBackColor = NativeMethods.GetTaskbarColor();
+            if (small) {
+              if (iconValue[1] == '.' || iconValue[1] == ',') {
+                var bigPart = iconValue.Substring(0, 1);
+                var smallPart = iconValue.Substring(1);
+                TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
+                  defaultBackColor, TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
+                  defaultBackColor, TextFormatFlags.Bottom);
+              }
+              else {
+                var size = TextRenderer.MeasureText(iconValue, smallFont);
+                TextRenderer.DrawText(graphics, iconValue, smallFont,
+                  new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, defaultBackColor,
+                  TextFormatFlags.VerticalCenter);
+              }
             }
-            var width = Math.Max(16, (int)Math.Round(16 * dpiX / 96));
-            var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
-            var fontSize = iconValue.Length > 2 ? 7.0F : 9.0F;
-            using (var image = new Bitmap(width, height))
-            using (var graphics = Graphics.FromImage(image))
-            using (var font = new Font("Arial", width == 16 ? fontSize : (fontSize - 1) * dpiX / 96))
-            using (var format = new StringFormat()) {
-              format.Alignment = StringAlignment.Center;
-              format.LineAlignment = StringAlignment.Center;
-
-              graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-              graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-              graphics.SmoothingMode = SmoothingMode.AntiAlias;
-              graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-
-              graphics.FillRectangle(Brushes.Transparent, 0, 0, image.Width, image.Height);
-              graphics.DrawString(iconValue, font, iconValueBrush, (float) image.Width / 2, (float) image.Height / 2, format);
-
-              var handle = image.GetHicon();
-              using (var icon = Icon.FromHandle(handle))
-                notifyIcon.Icon = (Icon) icon.Clone();
-              NativeMethods.DestroyIcon(handle);
+            else {
+              var size = TextRenderer.MeasureText(iconValue, font);
+              TextRenderer.DrawText(graphics, iconValue, font,
+                new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, defaultBackColor,
+                TextFormatFlags.VerticalCenter);
             }
+
+            var handle = bitmap.GetHicon();
+            using (var icon = Icon.FromHandle(handle))
+              notifyIcon.Icon = (Icon) icon.Clone();
+            NativeMethods.DestroyIcon(handle);
         }
         catch {
           notifyIcon.Icon = imageIcon;
@@ -414,8 +427,6 @@ namespace memoryOptimizer {
 
           Notify(message);
         }
-
-        OnOptimizeCommandCompleted?.Invoke();
       }
       finally {
         IsBusy = false;
@@ -516,7 +527,6 @@ namespace memoryOptimizer {
           dialog.Color = Settings.TrayIconValueColor;
           if (dialog.ShowDialog() != DialogResult.OK) return;
           Settings.TrayIconValueColor = dialog.Color;
-          iconValueBrush = new SolidBrush(Settings.TrayIconValueColor);
           Update();
         }
       }));
@@ -591,14 +601,12 @@ namespace memoryOptimizer {
         }
       }
 
-      if (imageIcon != null) {
-        imageIcon.Dispose();
-      }
-
-      if (notifyIcon != null) {
-        notifyIcon.Dispose();
-      }
-
+      imageIcon?.Dispose();
+      notifyIcon?.Dispose();
+      graphics?.Dispose();
+      bitmap?.Dispose();
+      font?.Dispose();
+      smallFont?.Dispose();
       GC.SuppressFinalize(this);
     }
 
