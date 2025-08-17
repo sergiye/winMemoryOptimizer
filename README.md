@@ -96,11 +96,11 @@ You can check if it works properly on your PC. If you notice any inaccuracies, p
 
 Also, don't forget to star the repository to help other people find it.
 
-<!-- [![Star History Chart](https://api.star-history.com/svg?repos=sergiye/memoryOptimizer&type=Date)](https://star-history.com/#sergiye/memoryOptimizer&Date) -->
+[![Star History Chart](https://api.star-history.com/svg?repos=sergiye/memoryOptimizer&type=Date)](https://star-history.com/#sergiye/memoryOptimizer&Date)
 
 <!-- [//]: # ([![Stargazers over time]&#40;https://starchart.cc/sergiye/memoryOptimizer.svg?variant=adaptive&#41;]&#40;https://starchart.cc/sergiye/memoryOptimizer&#41;) -->
 
-<!-- [![Stargazers repo roster for @sergiye/memoryOptimizer](https://reporoster.com/stars/sergiye/memoryOptimizer)](https://github.com/sergiye/memoryOptimizer/stargazers) -->
+[![Stargazers for @sergiye/memoryOptimizer](https://reporoster.com/stars/sergiye/memoryOptimizer)](https://github.com/sergiye/memoryOptimizer/stargazers)
 
 ## Donate!
 Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.
