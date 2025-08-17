@@ -11,7 +11,7 @@
 
     public ulong Bytes { get; private set; }
     public uint Percentage { get; set; }
-    public Enums.Memory.Unit Unit { get; }
+    public Enums.MemoryUnit Unit { get; }
     public double Value { get; }
     public override string ToString() => $"{Value:0.#} {Unit} ({Percentage}%)";
   }

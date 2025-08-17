@@ -71,15 +71,15 @@ namespace memoryOptimizer {
       return new Rectangle(data.rc.left, data.rc.top, data.rc.right - data.rc.left, data.rc.bottom - data.rc.top);
     }
 
-    private static Color GetColourAt(Point location) {
+    private static Color GetColorAt(Point location) {
       using (var screenPixel = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
-      using (var gdest = Graphics.FromImage(screenPixel)) {
-        using (var gsrc = Graphics.FromHwnd(IntPtr.Zero)) {
-          var hSrcDC = gsrc.GetHdc();
-          var hDC = gdest.GetHdc();
-          var retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, location.X, location.Y, (int) CopyPixelOperation.SourceCopy);
-          gdest.ReleaseHdc();
-          gsrc.ReleaseHdc();
+      using (var gDst = Graphics.FromImage(screenPixel)) {
+        using (var gSrc = Graphics.FromHwnd(IntPtr.Zero)) {
+          var hSrcDC = gSrc.GetHdc();
+          var hDC = gDst.GetHdc();
+          var retVal = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, location.X, location.Y, (int) CopyPixelOperation.SourceCopy);
+          gDst.ReleaseHdc();
+          gSrc.ReleaseHdc();
         }
 
         return screenPixel.GetPixel(0, 0);
@@ -87,7 +87,7 @@ namespace memoryOptimizer {
     }
 
     public static Color GetTaskbarColor() {
-      return GetColourAt(GetTaskbarPosition().Location);
+      return GetColorAt(GetTaskbarPosition().Location);
     }
   }
 }

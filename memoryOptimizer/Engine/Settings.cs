@@ -12,9 +12,9 @@ namespace memoryOptimizer {
       AutoOptimizationInterval = 0;
       AutoOptimizationMemoryUsage = 0;
       UpdateIntervalSeconds = 30;
-      MemoryAreas = Enums.Memory.Areas.CombinedPageList | Enums.Memory.Areas.ModifiedPageList |
-                    Enums.Memory.Areas.ProcessesWorkingSet | Enums.Memory.Areas.StandbyList |
-                    Enums.Memory.Areas.SystemWorkingSet;
+      MemoryAreas = Enums.MemoryAreas.CombinedPageList | Enums.MemoryAreas.ModifiedPageList |
+                    Enums.MemoryAreas.ProcessesWorkingSet | Enums.MemoryAreas.StandbyList |
+                    Enums.MemoryAreas.SystemWorkingSet;
       ProcessExclusionList = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
       RunOnPriority = Enums.Priority.Low;
       ShowOptimizationNotifications = true;
@@ -38,10 +38,10 @@ namespace memoryOptimizer {
           UpdateIntervalSeconds = Convert.ToInt32(key.GetValue(Constants.RegistryName.UpdateIntervalSeconds, UpdateIntervalSeconds));
 
           if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.MemoryAreas, MemoryAreas)),
-                out Enums.Memory.Areas memoryAreas) && memoryAreas.IsValid()) {
-            if ((memoryAreas & Enums.Memory.Areas.StandbyList) != 0 &&
-                (memoryAreas & Enums.Memory.Areas.StandbyListLowPriority) != 0)
-              memoryAreas &= ~Enums.Memory.Areas.StandbyListLowPriority;
+                out Enums.MemoryAreas memoryAreas) && memoryAreas.IsValid()) {
+            if ((memoryAreas & Enums.MemoryAreas.StandbyList) != 0 &&
+                (memoryAreas & Enums.MemoryAreas.StandbyListLowPriority) != 0)
+              memoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
 
             MemoryAreas = memoryAreas;
           }
@@ -71,7 +71,7 @@ namespace memoryOptimizer {
     public static int AutoOptimizationInterval { get; set; }
     public static int AutoOptimizationMemoryUsage { get; set; }
     public static int UpdateIntervalSeconds { get; set; }
-    public static Enums.Memory.Areas MemoryAreas { get; set; }
+    public static Enums.MemoryAreas MemoryAreas { get; set; }
     public static SortedSet<string> ProcessExclusionList { get; }
     public static Enums.Priority RunOnPriority { get; set; }
     public static bool ShowOptimizationNotifications { get; set; }

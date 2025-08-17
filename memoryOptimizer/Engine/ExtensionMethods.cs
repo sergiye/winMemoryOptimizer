@@ -28,11 +28,11 @@ namespace memoryOptimizer {
       return new string(value.ToCharArray().Where(c => !char.IsWhiteSpace(c)).ToArray());
     }
 
-    public static KeyValuePair<double, Enums.Memory.Unit> ToMemoryUnit(this ulong value) {
+    public static KeyValuePair<double, Enums.MemoryUnit> ToMemoryUnit(this ulong value) {
       if (value < 1024)
-        return new KeyValuePair<double, Enums.Memory.Unit>(value, Enums.Memory.Unit.B);
+        return new KeyValuePair<double, Enums.MemoryUnit>(value, Enums.MemoryUnit.B);
       var mag = (int) Math.Log(value, 1024);
-      return new KeyValuePair<double, Enums.Memory.Unit>(value / Math.Pow(1024, mag), (Enums.Memory.Unit) mag);
+      return new KeyValuePair<double, Enums.MemoryUnit>(value / Math.Pow(1024, mag), (Enums.MemoryUnit) mag);
     }
 
     public static bool IsDark(this Color color) {

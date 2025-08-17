@@ -62,8 +62,8 @@ namespace memoryOptimizer {
       return result;
     }
 
-    public void Optimize(Enums.Memory.Areas areas) {
-      if (areas == Enums.Memory.Areas.None)
+    public void Optimize(Enums.MemoryAreas areas) {
+      if (areas == Enums.MemoryAreas.None)
         return;
 
       var errorLog = new StringBuilder();
@@ -75,7 +75,7 @@ namespace memoryOptimizer {
       var value = (byte) 0;
 
       // Optimize Processes Working Set
-      if ((areas & Enums.Memory.Areas.ProcessesWorkingSet) != 0) {
+      if ((areas & Enums.MemoryAreas.ProcessesWorkingSet) != 0) {
         try {
           if (OnOptimizeProgressUpdate != null) {
             value++;
@@ -97,7 +97,7 @@ namespace memoryOptimizer {
         }
       }
 
-      if ((areas & Enums.Memory.Areas.SystemWorkingSet) != 0) {
+      if ((areas & Enums.MemoryAreas.SystemWorkingSet) != 0) {
         try {
           if (OnOptimizeProgressUpdate != null) {
             value++;
@@ -118,7 +118,7 @@ namespace memoryOptimizer {
         }
       }
 
-      if ((areas & Enums.Memory.Areas.ModifiedPageList) != 0) {
+      if ((areas & Enums.MemoryAreas.ModifiedPageList) != 0) {
         try {
           if (OnOptimizeProgressUpdate != null) {
             value++;
@@ -139,8 +139,8 @@ namespace memoryOptimizer {
         }
       }
 
-      if ((areas & (Enums.Memory.Areas.StandbyList | Enums.Memory.Areas.StandbyListLowPriority)) != 0) {
-        var lowPriority = (areas & Enums.Memory.Areas.StandbyListLowPriority) != 0;
+      if ((areas & (Enums.MemoryAreas.StandbyList | Enums.MemoryAreas.StandbyListLowPriority)) != 0) {
+        var lowPriority = (areas & Enums.MemoryAreas.StandbyListLowPriority) != 0;
 
         try {
           if (OnOptimizeProgressUpdate != null) {
@@ -164,7 +164,7 @@ namespace memoryOptimizer {
         }
       }
 
-      if ((areas & Enums.Memory.Areas.CombinedPageList) != 0) {
+      if ((areas & Enums.MemoryAreas.CombinedPageList) != 0) {
         try {
           if (OnOptimizeProgressUpdate != null) {
             value++;

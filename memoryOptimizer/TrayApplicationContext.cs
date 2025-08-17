@@ -26,10 +26,12 @@ namespace memoryOptimizer {
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
     private ToolStripMenuItem updateIntervalMenu;
+    private ToolStripMenuItem optimizationTypesMenu;
     private readonly Bitmap bitmap;
     private readonly Graphics graphics;
     private readonly Font font;
     private readonly Font smallFont;
+    private readonly Color iconBackColor = Color.Transparent;
     private bool isBusy;
 
     private BackgroundWorker monitorAppWorker;
@@ -72,7 +74,7 @@ namespace memoryOptimizer {
       }
       font = new Font("Arial", width == 16 ? 9.0F : 8.0F * dpiX / 96);
       smallFont = new Font("Arial", width == 16 ? 7.0F : 6.0F * dpiX / 96);
-      
+
       Updater.Subscribe(
         (message, isError) => {
           MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OK,
@@ -162,37 +164,36 @@ namespace memoryOptimizer {
       }
       else {
         try {
-            var small = iconValue.Length > 2;
-            graphics.Clear(Color.Transparent);
-            var color = Settings.TrayIconValueColor;
-            var defaultBackColor = NativeMethods.GetTaskbarColor();
-            if (small) {
-              if (iconValue[1] == '.' || iconValue[1] == ',') {
-                var bigPart = iconValue.Substring(0, 1);
-                var smallPart = iconValue.Substring(1);
-                TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
-                  defaultBackColor, TextFormatFlags.VerticalCenter);
-                TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
-                  defaultBackColor, TextFormatFlags.Bottom);
-              }
-              else {
-                var size = TextRenderer.MeasureText(iconValue, smallFont);
-                TextRenderer.DrawText(graphics, iconValue, smallFont,
-                  new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, defaultBackColor,
-                  TextFormatFlags.VerticalCenter);
-              }
+          var small = iconValue.Length > 2;
+          var color = Settings.TrayIconValueColor;
+          graphics.Clear(iconBackColor);
+          if (small) {
+            if (iconValue[1] == '.' || iconValue[1] == ',') {
+              var bigPart = iconValue.Substring(0, 1);
+              var smallPart = iconValue.Substring(1);
+              TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
+                iconBackColor, TextFormatFlags.VerticalCenter);
+              TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
+                iconBackColor, TextFormatFlags.Bottom);
             }
             else {
-              var size = TextRenderer.MeasureText(iconValue, font);
-              TextRenderer.DrawText(graphics, iconValue, font,
-                new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, defaultBackColor,
+              var size = TextRenderer.MeasureText(iconValue, smallFont);
+              TextRenderer.DrawText(graphics, iconValue, smallFont,
+                new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
                 TextFormatFlags.VerticalCenter);
             }
+          }
+          else {
+            var size = TextRenderer.MeasureText(iconValue, font);
+            TextRenderer.DrawText(graphics, iconValue, font,
+              new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
+              TextFormatFlags.VerticalCenter);
+          }
 
-            var handle = bitmap.GetHicon();
-            using (var icon = Icon.FromHandle(handle))
-              notifyIcon.Icon = (Icon) icon.Clone();
-            NativeMethods.DestroyIcon(handle);
+          var handle = bitmap.GetHicon();
+          using (var icon = Icon.FromHandle(handle))
+            notifyIcon.Icon = (Icon) icon.Clone();
+          NativeMethods.DestroyIcon(handle);
         }
         catch {
           notifyIcon.Icon = imageIcon;
@@ -208,57 +209,54 @@ namespace memoryOptimizer {
       //   Notify($"Step: {step}", $"{optimizationProgressPercentage}% optimized", 1, Enums.Icon.Notification.Information);
     }
 
-    public Enums.Memory.Areas MemoryAreas {
+    public Enums.MemoryAreas MemoryAreas {
       get {
         if (!computer.OperatingSystem.HasCombinedPageList)
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.CombinedPageList;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.CombinedPageList;
 
         if (!computer.OperatingSystem.HasModifiedPageList)
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.ModifiedPageList;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedPageList;
 
         if (!computer.OperatingSystem.HasProcessesWorkingSet)
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.ProcessesWorkingSet;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.ProcessesWorkingSet;
 
         if (!computer.OperatingSystem.HasStandbyList) {
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.StandbyList;
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.StandbyListLowPriority;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
         }
 
         if (!computer.OperatingSystem.HasSystemWorkingSet)
-          Settings.MemoryAreas &= ~Enums.Memory.Areas.SystemWorkingSet;
+          Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemWorkingSet;
 
         return Settings.MemoryAreas;
       }
-      set {
-        try {
-          IsBusy = true;
-
-          if ((Settings.MemoryAreas & value) != 0)
-            Settings.MemoryAreas &= ~value;
-          else
-            Settings.MemoryAreas |= value;
-
-          switch (value) {
-            case Enums.Memory.Areas.StandbyList:
-              if ((Settings.MemoryAreas & Enums.Memory.Areas.StandbyListLowPriority) != 0)
-                Settings.MemoryAreas &= ~Enums.Memory.Areas.StandbyListLowPriority;
-              break;
-
-            case Enums.Memory.Areas.StandbyListLowPriority:
-              if ((Settings.MemoryAreas & Enums.Memory.Areas.StandbyList) != 0)
-                Settings.MemoryAreas &= ~Enums.Memory.Areas.StandbyList;
-              break;
-          }
-
-          Settings.Save();
-        }
-        finally {
-          IsBusy = false;
-        }
-      }
     }
 
-    public bool CanOptimize => MemoryAreas != Enums.Memory.Areas.None;
+    private void ToggleMemoryArea(Enums.MemoryAreas value) {
+      try {
+        IsBusy = true;
+        if (Settings.MemoryAreas.HasFlag(value))
+          Settings.MemoryAreas &= ~value;
+        else
+          Settings.MemoryAreas |= value;
+        switch (value) {
+          case Enums.MemoryAreas.StandbyList:
+            if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyListLowPriority))
+              Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
+            break;
+
+          case Enums.MemoryAreas.StandbyListLowPriority:
+            if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyList))
+              Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
+            break;
+        }
+      }
+      finally {
+        IsBusy = false;
+      }  
+    }
+    
+    public bool CanOptimize => MemoryAreas != Enums.MemoryAreas.None;
 
     private static void SetPriority(Enums.Priority priority) {
       bool priorityBoostEnabled;
@@ -463,31 +461,73 @@ namespace memoryOptimizer {
         Checked = startupManager.Startup,
       });
       //auto-optimize
-      autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every...") {
+      autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every") {
         DropDownItems = {
-          new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationInterval = 0; }),
-        }
-      };
-      for (var i = 1; i <= 24; i++) {
-        var interval = i;
-        autoOptimizeEveryMenu.DropDownItems.Add(new ToolStripMenuItem($"{i} hour(s)", null,
-          (_, _) => { Settings.AutoOptimizationInterval = interval; }));
+          new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationInterval = 0; }){Tag = 0},
+          new ToolStripMenuItem("1 hour", null, (_, _) => { Settings.AutoOptimizationInterval = 1; }){Tag = 1},
+          new ToolStripMenuItem("2 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 2; }){Tag = 2},
+          new ToolStripMenuItem("3 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 3; }){Tag = 3},
+          new ToolStripMenuItem("4 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 4; }){Tag = 4},
+          new ToolStripMenuItem("5 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 5; }){Tag = 5},
+          new ToolStripMenuItem("6 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 6; }){Tag = 6},
+          new ToolStripMenuItem("9 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 9; }){Tag = 9},
+          new ToolStripMenuItem("12 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 12; }){Tag = 12},
+          new ToolStripMenuItem("24 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 24; }){Tag = 24},
       }
+      };
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeEveryMenu);
 
-      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory is below...") {
+      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory is below") {
         DropDownItems = {
           new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationMemoryUsage = 0; }),
         }
       };
       for (var i = 10; i < 100; i+=10) {
-        var percents = i;
+        var percent = i;
         autoOptimizeUsageMenu.DropDownItems.Add(new ToolStripMenuItem($"{i}%", null,
-          (_, _) => { Settings.AutoOptimizationMemoryUsage = percents; }));
+          (_, _) => { Settings.AutoOptimizationMemoryUsage = percent; }));
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
 
-      updateIntervalMenu = new ToolStripMenuItem("Update interval...") {
+      optimizationTypesMenu = new ToolStripMenuItem("Optimization types") {
+        DropDownItems = {
+          new ToolStripMenuItem("Processes working set", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.ProcessesWorkingSet);
+          }) {Tag = Enums.MemoryAreas.ProcessesWorkingSet},
+          new ToolStripMenuItem("System working set", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.SystemWorkingSet);
+          }) {Tag = Enums.MemoryAreas.SystemWorkingSet},
+          new ToolStripMenuItem("Combined page list", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.CombinedPageList);
+          }) {Tag = Enums.MemoryAreas.CombinedPageList},
+          new ToolStripMenuItem("Modified page list", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.ModifiedPageList);
+          }) {Tag = Enums.MemoryAreas.ModifiedPageList},
+          new ToolStripMenuItem("Standby list", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.StandbyList);
+          }) {Tag = Enums.MemoryAreas.StandbyList},
+          new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
+            ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
+          }) {Tag = Enums.MemoryAreas.StandbyListLowPriority},
+        }
+      };
+      notifyIcon.ContextMenuStrip.Items.Add(optimizationTypesMenu);
+      
+      //settings
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
+        Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
+        ((ToolStripMenuItem)sender).Checked = Settings.ShowOptimizationNotifications;
+      }) {
+        Checked = Settings.ShowOptimizationNotifications,
+      });
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show virtual memory", null, (sender, _) => {
+        Settings.ShowVirtualMemory = !Settings.ShowVirtualMemory;
+        ((ToolStripMenuItem)sender).Checked = Settings.ShowVirtualMemory;
+      }) {
+        Checked = Settings.ShowVirtualMemory,
+      });
+
+      updateIntervalMenu = new ToolStripMenuItem("Update interval") {
         DropDownItems = {
           new ToolStripMenuItem("1 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 1; }){Tag = 1},
           new ToolStripMenuItem("2 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 2; }){Tag = 2},
@@ -499,20 +539,6 @@ namespace memoryOptimizer {
         }
       };
       notifyIcon.ContextMenuStrip.Items.Add(updateIntervalMenu);
-
-      //settings
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
-        Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
-        ((ToolStripMenuItem) sender).Checked = Settings.ShowOptimizationNotifications;
-      }) {
-        Checked = Settings.ShowOptimizationNotifications,
-      });
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show virtual memory", null, (sender, _) => {
-        Settings.ShowVirtualMemory = !Settings.ShowVirtualMemory;
-        ((ToolStripMenuItem) sender).Checked = Settings.ShowVirtualMemory;
-      }) {
-        Checked = Settings.ShowVirtualMemory,
-      });
       iconTypeMenu = new ToolStripMenuItem("Icon type") {
         DropDownItems = {
           new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
@@ -522,7 +548,7 @@ namespace memoryOptimizer {
         }
       };
       notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Set icon color...", null, (_, _) => {
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Set icon color", null, (_, _) => {
         using (var dialog = new ColorDialog()) {
           dialog.Color = Settings.TrayIconValueColor;
           if (dialog.ShowDialog() != DialogResult.OK) return;
@@ -549,14 +575,19 @@ namespace memoryOptimizer {
       foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
         ((ToolStripMenuItem) iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconMode == trayType;
       }
-      for (var i = 0; i <=24; i ++)
-        ((ToolStripMenuItem) autoOptimizeEveryMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationInterval == i;
+      foreach (var subItem in autoOptimizeEveryMenu.DropDownItems) {
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.AutoOptimizationInterval;
+      }
       for (var i = 0; i < 10; i ++)
         ((ToolStripMenuItem) autoOptimizeUsageMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationMemoryUsage == i * 10;
-      
+      foreach (var subItem in optimizationTypesMenu.DropDownItems) {
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is Enums.MemoryAreas area && Settings.MemoryAreas.HasFlag(area);
+      }
       foreach (var subItem in updateIntervalMenu.DropDownItems) {
-        if (subItem is not ToolStripMenuItem subMenuItem) continue;
-        subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.UpdateIntervalSeconds;
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.UpdateIntervalSeconds;
       }  
     }
 

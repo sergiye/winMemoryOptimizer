@@ -11,30 +11,28 @@ namespace memoryOptimizer {
       Warning = 4,
       Error = 8
     }
-
-    public static class Memory {
-      [Flags]
-      public enum Areas {
-        None = 0,
-        CombinedPageList = 1,
-        ModifiedPageList = 2,
-        ProcessesWorkingSet = 4,
-        StandbyList = 8,
-        StandbyListLowPriority = 16,
-        SystemWorkingSet = 32
-      }
-
-      public enum Unit {
-        B,
-        KB,
-        MB,
-        GB,
-        TB,
-        PB,
-        EB,
-        ZB,
-        YB
-      }
+    
+    [Flags]
+    public enum MemoryAreas {
+      None = 0,
+      CombinedPageList = 1,
+      ModifiedPageList = 2,
+      ProcessesWorkingSet = 4,
+      StandbyList = 8,
+      StandbyListLowPriority = 16,
+      SystemWorkingSet = 32
+    }
+    
+    public enum MemoryUnit {
+      B,
+      KB,
+      MB,
+      GB,
+      TB,
+      PB,
+      EB,
+      ZB,
+      YB
     }
 
     public enum TrayIconMode {
