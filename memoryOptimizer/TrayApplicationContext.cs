@@ -15,11 +15,6 @@ namespace memoryOptimizer {
   internal class TrayApplicationContext : ApplicationContext {
 
     private readonly IContainer components = new Container();
-#if DEBUG
-    private const int MonitorAppIntervalSeconds = 30;
-#else
-    private const int MonitorAppIntervalSeconds = 60;
-#endif    
     private const int AutoOptimizationMemoryUsageInterval = 5; // Minute
 
     private readonly Icon imageIcon;
@@ -30,6 +25,7 @@ namespace memoryOptimizer {
     private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
+    private ToolStripMenuItem updateIntervalMenu;
     private Brush iconValueBrush;
     private bool isBusy;
 
@@ -345,7 +341,7 @@ namespace memoryOptimizer {
               }
             }
           }
-          Thread.Sleep(MonitorAppIntervalSeconds * 1000);
+          Thread.Sleep(Settings.UpdateIntervalSeconds * 1000);
         }
         catch (Exception ex) {
           Logger.Debug(ex.GetMessage());
@@ -467,6 +463,7 @@ namespace memoryOptimizer {
           (_, _) => { Settings.AutoOptimizationInterval = interval; }));
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeEveryMenu);
+
       autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory is below...") {
         DropDownItems = {
           new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationMemoryUsage = 0; }),
@@ -478,6 +475,19 @@ namespace memoryOptimizer {
           (_, _) => { Settings.AutoOptimizationMemoryUsage = percents; }));
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
+
+      updateIntervalMenu = new ToolStripMenuItem("Update interval...") {
+        DropDownItems = {
+          new ToolStripMenuItem("1 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 1; }){Tag = 1},
+          new ToolStripMenuItem("2 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 2; }){Tag = 2},
+          new ToolStripMenuItem("3 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 3; }){Tag = 3},
+          new ToolStripMenuItem("5 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 5; }){Tag = 5},
+          new ToolStripMenuItem("10 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 10; }){Tag = 10},
+          new ToolStripMenuItem("30 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 30; }){Tag = 30},
+          new ToolStripMenuItem("60 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 60; }){Tag = 60},
+        }
+      };
+      notifyIcon.ContextMenuStrip.Items.Add(updateIntervalMenu);
 
       //settings
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
@@ -533,6 +543,11 @@ namespace memoryOptimizer {
         ((ToolStripMenuItem) autoOptimizeEveryMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationInterval == i;
       for (var i = 0; i < 10; i ++)
         ((ToolStripMenuItem) autoOptimizeUsageMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationMemoryUsage == i * 10;
+      
+      foreach (var subItem in updateIntervalMenu.DropDownItems) {
+        if (subItem is not ToolStripMenuItem subMenuItem) continue;
+        subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.UpdateIntervalSeconds;
+      }  
     }
 
     private void OnNotifyIconMouseUp(object sender, MouseEventArgs e) {

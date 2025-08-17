@@ -2,25 +2,21 @@
   
   internal static class Constants {
     
-    public static class App {
-      
-      public static class Registry {
-        public static class Key {
-          public const string ProcessExclusionList = @"SOFTWARE\sergiye\memoryOptimizer\ProcessExclusionList";
-          public const string Settings = @"SOFTWARE\sergiye\memoryOptimizer";
-        }
+    public static class RegistryKey {
+      public const string Settings = @"SOFTWARE\sergiye\memoryOptimizer";
+      public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
+    }
 
-        public static class Name {
-          public const string AutoOptimizationInterval = "AutoOptimizationInterval";
-          public const string AutoOptimizationMemoryUsage = "AutoOptimizationMemoryUsage";
-          public const string MemoryAreas = "MemoryAreas";
-          public const string RunOnPriority = "RunOnPriority";
-          public const string ShowOptimizationNotifications = "ShowOptimizationNotifications";
-          public const string ShowVirtualMemory = "ShowVirtualMemory";
-          public const string TrayIcon = "TrayIcon";
-          public const string TrayIconValueColor = "TrayIconValueColor";
-        }
-      }
+    public static class RegistryName {
+      public const string AutoOptimizationInterval = "AutoOptimizationInterval";
+      public const string AutoOptimizationMemoryUsage = "AutoOptimizationMemoryUsage";
+      public const string UpdateIntervalSeconds = "UpdateIntervalSeconds";
+      public const string MemoryAreas = "MemoryAreas";
+      public const string RunOnPriority = "RunOnPriority";
+      public const string ShowOptimizationNotifications = "ShowOptimizationNotifications";
+      public const string ShowVirtualMemory = "ShowVirtualMemory";
+      public const string TrayIcon = "TrayIcon";
+      public const string TrayIconValueColor = "TrayIconValueColor";
     }
 
     public static class Windows {
