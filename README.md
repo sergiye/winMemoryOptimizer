@@ -32,11 +32,11 @@ The published version can be obtained from [releases](https://github.com/sergiye
 
 ### Settings
 
-- `Auto update` Keeps the app up to date. 
-- `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it
 - `Run on startup` Runs the app after the system boots up. It creates an entry on Windows **Task Scheduler**
 - `Show optimization notifications` Sends a message to the notification area after optimization. It includes the approximate memory released
 - `Show virtual memory` It also monitors the virtual memory usage
+<!-- - `Auto update` Keeps the app up to date.  -->
+<!-- - `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it -->
 
 ### Memory Areas
 
@@ -62,6 +62,7 @@ The app generates logs in the Windows event
 
 1. Press **Win + R** to open the Run command dialog box
 2. Type **eventvwr** and press **Enter** to open the Event Viewer
+3. Open `Windows Logs` -> `Applications`
 
 
 ## Frequently Asked Questions (FAQ)
@@ -70,7 +71,7 @@ The app generates logs in the Windows event
 
 - Portable (Single .exe file) and super lightweight
 - Use of Windows native methods for memory management
-- Windows Registry / local file to keep user settings
+- Windows Registry to keep user settings
 - Windows Event to save logs
 
 ### Why has the app been flagged as Malware/Virus and blocked by Windows Defender, SmartScreen, or Antivirus?
