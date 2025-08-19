@@ -72,8 +72,8 @@ namespace memoryOptimizer {
         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
         graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
       }
-      font = new Font("Arial", width == 16 ? 9.0F : 8.0F * dpiX / 96);
-      smallFont = new Font("Arial", width == 16 ? 7.0F : 6.0F * dpiX / 96);
+      font = new Font("Arial", width == 16 ? 10.0F : 8.0F * dpiX / 96);
+      smallFont = new Font("Arial", width == 16 ? 8.0F : 6.0F * dpiX / 96);
 
       Updater.Subscribe(
         (message, isError) => {
