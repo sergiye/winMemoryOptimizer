@@ -51,10 +51,14 @@ The published version can be obtained from [releases](https://github.com/sergiye
 
 - You can build a list of processes to ignore when memory is optimized
 
-### Tray icon
+### Tray icon type
 
 - `Image` Show app icon
-- `Memory usage` Show physical memory usage with a background color based on the value
+- `Memory usage` Show physical memory usage (in %)
+- `Memory available` Show physical memory available (in Gb)
+- `Memory used` Show physical memory used (in Gb)
+
+The tray icon tooltip also depends on the selected `Icon type`, but can contain virtual memory value if `Show virtual memory` option checked.
 
 ## Logs
 

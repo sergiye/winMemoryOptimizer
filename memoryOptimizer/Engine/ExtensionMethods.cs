@@ -39,5 +39,10 @@ namespace memoryOptimizer {
       var brightness = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B);
       return brightness < 186;
     }
+
+    public static string ToTrayValue(this double value) {
+      double rounded1 = Math.Round(value, 1);
+      return rounded1 < 10 ? rounded1.ToString("0.0") : Math.Round(value).ToString("0");
+    }
   }
 }

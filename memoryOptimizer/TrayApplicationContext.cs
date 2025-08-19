@@ -126,38 +126,38 @@ namespace memoryOptimizer {
       if (notifyIcon == null)
         return;
 
-      try {
-        if (computer?.Memory == null)
-          throw new ArgumentNullException(nameof(computer.Memory));
-
-        var text = Settings.ShowVirtualMemory
-          ? $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%"
-          : $"{"Memory usage".ToUpper()}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
-        // var text = $"Physical: {memory.Physical.Used} / {memory.Physical.Free}";
-        // if (Settings.ShowVirtualMemory)
-        //   text += $"{Environment.NewLine}Virtual: {memory.Virtual.Used} / {memory.Virtual.Free}";
-
-        notifyIcon.Text = text;
-      }
-      catch (Exception ex) {
-        notifyIcon.Text = string.Empty;
-        Debug.WriteLine(ex.Message);
-      }
-
       string iconValue = null;
+      string iconText = null;
       if (computer?.Memory != null) {
         switch (Settings.TrayIconMode) {
           case Enums.TrayIconMode.MemoryUsage:
-            iconValue = $"{computer.Memory.Physical.Used.Percentage:00}";
+            iconValue = $"{computer.Memory.Physical.Used.Percentage:0}";
+            iconText = $"{"Memory usage"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
+            if (Settings.ShowVirtualMemory)
+              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%";
             break;
           case Enums.TrayIconMode.MemoryUsed:
-            iconValue = computer.Memory.Physical.Used.Value >= 10 ? $"{computer.Memory.Physical.Used.Value:00}" : $"{computer.Memory.Physical.Used.Value:0.0}";
+            iconValue = computer.Memory.Physical.Used.Value.ToTrayValue();
+            iconText = $"{"Memory used"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Value:0.00} {computer.Memory.Physical.Used.Unit}";
+            if (Settings.ShowVirtualMemory)
+              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Value:0.00} {computer.Memory.Physical.Used.Unit}";
             break;
           case Enums.TrayIconMode.MemoryAvailable:
-            iconValue = computer.Memory.Physical.Free.Value >= 10 ? $"{computer.Memory.Physical.Free.Value:00}" : $"{computer.Memory.Physical.Free.Value:0.0}";
+            iconValue = computer.Memory.Physical.Free.Value.ToTrayValue();
+            iconText = $"{"Memory available"}{Environment.NewLine}Physical: {computer.Memory.Physical.Free.Value:0.00} {computer.Memory.Physical.Free.Unit}";
+            if (Settings.ShowVirtualMemory)
+              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Free.Value:0.00} {computer.Memory.Physical.Free.Unit}";
+            break;
+          case Enums.TrayIconMode.Image:
+          default:
+            iconText = $"{"Memory usage"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
+            if (Settings.ShowVirtualMemory)
+              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%";
             break;
         }
       }
+
+      notifyIcon.Text = iconText;
 
       if (string.IsNullOrEmpty(iconValue)) {
         notifyIcon.Icon = imageIcon;
