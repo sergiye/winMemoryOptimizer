@@ -6,8 +6,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
-using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace memoryOptimizer {
@@ -34,9 +34,6 @@ namespace memoryOptimizer {
     private readonly Color iconBackColor = Color.Transparent;
     private bool isBusy;
 
-    private BackgroundWorker monitorAppWorker;
-    private BackgroundWorker monitorComputerWorker;
-
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
 
@@ -54,7 +51,12 @@ namespace memoryOptimizer {
         Visible = true
       };
       notifyIcon.ContextMenuStrip.Opening += OnContextMenuStripOpening;
-      notifyIcon.MouseUp += OnNotifyIconMouseUp;
+      //notifyIcon.MouseUp += (s, e) => {
+      //  if (e.Button != MouseButtons.Left) return;
+      //  var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
+      //  mi?.Invoke(notifyIcon, null);
+      //};
+      notifyIcon.DoubleClick += (_, _) => { OptimizeAsync(); };
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
 
       float dpiX, dpiY;
@@ -95,19 +97,14 @@ namespace memoryOptimizer {
       AddMenuItems();
       Theme.SetAutoTheme();
 
-      MonitorAsync();
+      Task.Factory.StartNew(MonitorApp, TaskCreationOptions.LongRunning);
+      Task.Factory.StartNew(MonitorComputer, TaskCreationOptions.LongRunning);
     }
 
     public bool IsBusy {
       get => isBusy;
       set {
-        try {
-          Loading(value);
-        }
-        catch {
-          // ignored
-        }
-
+        Loading(value);
         isBusy = value;
       }
     }
@@ -331,9 +328,9 @@ namespace memoryOptimizer {
       }
     }
 
-    private void MonitorApp(object sender, DoWorkEventArgs e) {
+    private void MonitorApp() {
       SetPriority(Settings.RunOnPriority);
-      while (!monitorAppWorker.CancellationPending) {
+      while (true) {
         try {
           if (IsBusy)
             continue;
@@ -360,33 +357,9 @@ namespace memoryOptimizer {
       }
     }
 
-    private void MonitorAsync() {
-      try {
-        using (monitorAppWorker = new BackgroundWorker()) {
-          monitorAppWorker.DoWork += MonitorApp;
-          monitorAppWorker.WorkerSupportsCancellation = true;
-          monitorAppWorker.RunWorkerAsync();
-        }
-      }
-      catch (Exception e) {
-        Logger.Error(e);
-      }
-
-      try {
-        using (monitorComputerWorker = new BackgroundWorker()) {
-          monitorComputerWorker.DoWork += MonitorComputer;
-          monitorComputerWorker.WorkerSupportsCancellation = true;
-          monitorComputerWorker.RunWorkerAsync();
-        }
-      }
-      catch (Exception e) {
-        Logger.Error(e);
-      }
-    }
-
-    private void MonitorComputer(object sender, DoWorkEventArgs e) {
+    private void MonitorComputer() {
       SetPriority(Settings.RunOnPriority);
-      while (!monitorComputerWorker.CancellationPending) {
+      while (true) {
         try {
           if (IsBusy)
             continue;
@@ -400,8 +373,10 @@ namespace memoryOptimizer {
       }
     }
 
-    private void Optimize(object sender, DoWorkEventArgs e) {
+    private void Optimize() {
       try {
+        if (IsBusy)
+          return;
         IsBusy = true;
         SetPriority(Settings.RunOnPriority);
 
@@ -426,25 +401,17 @@ namespace memoryOptimizer {
           Notify(message);
         }
       }
+      catch (Exception ex) {
+        Logger.Error(ex);
+      }
       finally {
         IsBusy = false;
       }
     }
 
     private void OptimizeAsync() {
-      try {
-        // optimizationProgressStep = "Optimize";
-        // optimizationProgressValue = 0;
-        // optimizationProgressTotal = (byte) (new BitArray(new[] {(int) Settings.MemoryAreas}).OfType<bool>().Count(x => x) + 1);
-
-        using (var worker = new BackgroundWorker()) {
-          worker.DoWork += Optimize;
-          worker.RunWorkerAsync();
-        }
-      }
-      catch (Exception e) {
-        Logger.Error(e);
-      }
+      if (!IsBusy)
+        Task.Run(Optimize);
     }
 
     private void AddMenuItems() {
@@ -591,47 +558,9 @@ namespace memoryOptimizer {
       }  
     }
 
-    private void OnNotifyIconMouseUp(object sender, MouseEventArgs e) {
-      if (e.Button != MouseButtons.Left) return;
-      var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
-      mi?.Invoke(notifyIcon, null);
-    }
-
     protected override void Dispose(bool disposing) {
       if (!disposing || components == null) return;
       components.Dispose();
-      if (monitorAppWorker != null) {
-        try {
-          monitorAppWorker.CancelAsync();
-        }
-        catch {
-          // ignored
-        }
-
-        try {
-          monitorAppWorker.Dispose();
-        }
-        catch {
-          // ignored
-        }
-      }
-
-      if (monitorComputerWorker != null) {
-        try {
-          monitorComputerWorker.CancelAsync();
-        }
-        catch {
-          // ignored
-        }
-
-        try {
-          monitorComputerWorker.Dispose();
-        }
-        catch {
-          // ignored
-        }
-      }
-
       imageIcon?.Dispose();
       notifyIcon?.Dispose();
       graphics?.Dispose();
