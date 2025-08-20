@@ -33,6 +33,7 @@ namespace memoryOptimizer {
     private readonly Font smallFont;
     private readonly Color iconBackColor = Color.Transparent;
     private bool isBusy;
+    private string prevIconValue = null;
 
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
@@ -97,7 +98,6 @@ namespace memoryOptimizer {
       AddMenuItems();
       Theme.SetAutoTheme();
 
-      Task.Factory.StartNew(MonitorApp, TaskCreationOptions.LongRunning);
       Task.Factory.StartNew(MonitorComputer, TaskCreationOptions.LongRunning);
     }
 
@@ -156,6 +156,10 @@ namespace memoryOptimizer {
 
       notifyIcon.Text = iconText;
 
+      if (prevIconValue == iconValue)
+        return;
+
+      prevIconValue = iconValue;
       if (string.IsNullOrEmpty(iconValue)) {
         notifyIcon.Icon = imageIcon;
       }
@@ -328,12 +332,16 @@ namespace memoryOptimizer {
       }
     }
 
-    private void MonitorApp() {
+    private async Task MonitorComputer() {
       SetPriority(Settings.RunOnPriority);
       while (true) {
         try {
           if (IsBusy)
             continue;
+
+          computer.Memory = computerService.Memory;
+          Update();
+
           if (CanOptimize) {
             if (Settings.AutoOptimizationInterval > 0 &&
                 DateTimeOffset.Now.Subtract(lastAutoOptimizationByInterval).TotalHours >= Settings.AutoOptimizationInterval) {
@@ -349,23 +357,8 @@ namespace memoryOptimizer {
               }
             }
           }
-          Thread.Sleep(Settings.UpdateIntervalSeconds * 1000);
-        }
-        catch (Exception ex) {
-          Logger.Debug(ex.GetMessage());
-        }
-      }
-    }
 
-    private void MonitorComputer() {
-      SetPriority(Settings.RunOnPriority);
-      while (true) {
-        try {
-          if (IsBusy)
-            continue;
-          computer.Memory = computerService.Memory;
-          Update();
-          Thread.Sleep(5000);
+          await Task.Delay(Settings.UpdateIntervalSeconds * 1000);
         }
         catch (Exception ex) {
           Logger.Debug(ex.GetMessage());
