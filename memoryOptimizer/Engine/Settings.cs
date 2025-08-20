@@ -7,21 +7,30 @@ using Microsoft.Win32;
 namespace memoryOptimizer {
 
   internal static class Settings {
-  
+    private static Color trayIconValueColor;
+    private static Enums.TrayIconMode trayIconMode;
+    private static bool showVirtualMemory;
+    private static bool showOptimizationNotifications;
+    private static Enums.Priority runOnPriority;
+    private static Enums.MemoryAreas memoryAreas;
+    private static int updateIntervalSeconds;
+    private static int autoOptimizationMemoryUsage;
+    private static int autoOptimizationInterval;
+
     static Settings() {
-      AutoOptimizationInterval = 0;
-      AutoOptimizationMemoryUsage = 0;
-      UpdateIntervalSeconds = 30;
-      MemoryAreas = Enums.MemoryAreas.CombinedPageList | Enums.MemoryAreas.ModifiedPageList |
+      autoOptimizationInterval = 0;
+      autoOptimizationMemoryUsage = 0;
+      updateIntervalSeconds = 30;
+      memoryAreas = Enums.MemoryAreas.CombinedPageList | Enums.MemoryAreas.ModifiedPageList |
                     Enums.MemoryAreas.ProcessesWorkingSet | Enums.MemoryAreas.StandbyList |
                     Enums.MemoryAreas.SystemWorkingSet;
       ProcessExclusionList = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-      RunOnPriority = Enums.Priority.Low;
-      ShowOptimizationNotifications = true;
-      ShowVirtualMemory = true;
-      TrayIconMode = Enums.TrayIconMode.Image;
+      runOnPriority = Enums.Priority.Low;
+      showOptimizationNotifications = true;
+      showVirtualMemory = true;
+      trayIconMode = Enums.TrayIconMode.Image;
       var taskbarColor = NativeMethods.GetTaskbarColor(); 
-      TrayIconValueColor = taskbarColor.IsDark() ? Color.White : Color.Black;
+      trayIconValueColor = taskbarColor.IsDark() ? Color.White : Color.Black;
 
       try {
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.ProcessExclusionList)) {
@@ -33,31 +42,31 @@ namespace memoryOptimizer {
 
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.Settings)) {
           if (key == null) return;
-          AutoOptimizationInterval = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationInterval, AutoOptimizationInterval));
-          AutoOptimizationMemoryUsage = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationMemoryUsage, AutoOptimizationMemoryUsage));
-          UpdateIntervalSeconds = Convert.ToInt32(key.GetValue(Constants.RegistryName.UpdateIntervalSeconds, UpdateIntervalSeconds));
+          autoOptimizationInterval = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationInterval, autoOptimizationInterval));
+          autoOptimizationMemoryUsage = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage));
+          updateIntervalSeconds = Convert.ToInt32(key.GetValue(Constants.RegistryName.UpdateIntervalSeconds, updateIntervalSeconds));
 
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.MemoryAreas, MemoryAreas)),
-                out Enums.MemoryAreas memoryAreas) && memoryAreas.IsValid()) {
-            if ((memoryAreas & Enums.MemoryAreas.StandbyList) != 0 &&
-                (memoryAreas & Enums.MemoryAreas.StandbyListLowPriority) != 0)
-              memoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
+          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.MemoryAreas, memoryAreas)),
+                out Enums.MemoryAreas memoryAreasValue) && memoryAreasValue.IsValid()) {
+            if ((memoryAreasValue & Enums.MemoryAreas.StandbyList) != 0 &&
+                (memoryAreasValue & Enums.MemoryAreas.StandbyListLowPriority) != 0)
+              memoryAreasValue &= ~Enums.MemoryAreas.StandbyListLowPriority;
 
-            MemoryAreas = memoryAreas;
+            memoryAreas = memoryAreasValue;
           }
 
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.RunOnPriority, RunOnPriority)),
-                out Enums.Priority runOnPriority) && runOnPriority.IsValid())
-            RunOnPriority = runOnPriority;
+          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.RunOnPriority, runOnPriority)),
+                out Enums.Priority runOnPriorityValue) && runOnPriorityValue.IsValid())
+            runOnPriority = runOnPriorityValue;
 
-          ShowOptimizationNotifications = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowOptimizationNotifications, ShowOptimizationNotifications));
-          ShowVirtualMemory = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowVirtualMemory, ShowVirtualMemory));
+          showOptimizationNotifications = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowOptimizationNotifications, showOptimizationNotifications));
+          showVirtualMemory = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowVirtualMemory, showVirtualMemory));
 
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.TrayIcon, TrayIconMode)),
+          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.TrayIcon, trayIconMode)),
                 out Enums.TrayIconMode trayIcon) && trayIcon.IsValid())
-            TrayIconMode = trayIcon;
+            trayIconMode = trayIcon;
 
-          TrayIconValueColor = Color.FromArgb(Convert.ToInt32(key.GetValue(Constants.RegistryName.TrayIconValueColor, 0)));
+          trayIconValueColor = Color.FromArgb(Convert.ToInt32(key.GetValue(Constants.RegistryName.TrayIconValueColor, trayIconValueColor)));
         }
       }
       catch (Exception e) {
@@ -68,16 +77,88 @@ namespace memoryOptimizer {
       }
     }
 
-    public static int AutoOptimizationInterval { get; set; }
-    public static int AutoOptimizationMemoryUsage { get; set; }
-    public static int UpdateIntervalSeconds { get; set; }
-    public static Enums.MemoryAreas MemoryAreas { get; set; }
+    public static int AutoOptimizationInterval {
+      get => autoOptimizationInterval;
+      set {
+        if (autoOptimizationInterval == value) return;
+        autoOptimizationInterval = value;
+        Save();
+      }
+    }
+
+    public static int AutoOptimizationMemoryUsage {
+      get => autoOptimizationMemoryUsage;
+      set {
+        if (autoOptimizationMemoryUsage == value) return;
+        autoOptimizationMemoryUsage = value;
+        Save();
+      }
+    }
+
+    public static int UpdateIntervalSeconds {
+      get => updateIntervalSeconds;
+      set {
+        if (updateIntervalSeconds == value) return;
+        updateIntervalSeconds = value;
+        Save();
+      }
+    }
+
+    public static Enums.MemoryAreas MemoryAreas {
+      get => memoryAreas;
+      set {
+        if (memoryAreas == value) return;
+        memoryAreas = value;
+        Save();
+      }
+    }
+
     public static SortedSet<string> ProcessExclusionList { get; }
-    public static Enums.Priority RunOnPriority { get; set; }
-    public static bool ShowOptimizationNotifications { get; set; }
-    public static bool ShowVirtualMemory { get; set; }
-    public static Enums.TrayIconMode TrayIconMode { get; set; }
-    public static Color TrayIconValueColor { get; set; }
+
+    public static Enums.Priority RunOnPriority {
+      get => runOnPriority;
+      set {
+        if (RunOnPriority == value) return;
+        runOnPriority = value;
+        Save();
+      }
+    }
+
+    public static bool ShowOptimizationNotifications {
+      get => showOptimizationNotifications;
+      set {
+        if (showOptimizationNotifications == value) return;
+        showOptimizationNotifications = value;
+        Save();
+      }
+    }
+
+    public static bool ShowVirtualMemory {
+      get => showVirtualMemory;
+      set {
+        if (showVirtualMemory == value) return;
+        showVirtualMemory = value;
+        Save();
+      }
+    }
+
+    public static Enums.TrayIconMode TrayIconMode {
+      get => trayIconMode;
+      set {
+        if (trayIconMode == value) return;
+        trayIconMode = value;
+        Save();
+      }
+    }
+
+    public static Color TrayIconValueColor {
+      get => trayIconValueColor;
+      set {
+        if (trayIconValueColor == value) return;
+        trayIconValueColor = value;
+        Save();
+      }
+    }
 
     public static void Save() {
       try {
