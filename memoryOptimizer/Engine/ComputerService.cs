@@ -10,11 +10,18 @@ namespace memoryOptimizer {
   
   internal class ComputerService {
     
-    public Memory Memory { get; private set; } = new Memory(new WindowsStructs.MemoryStatusEx());
+    private WindowsStructs.MemoryStatusEx memoryStatusEx;
+
+    public ComputerService() {
+      memoryStatusEx = new WindowsStructs.MemoryStatusEx();
+      Memory = new Memory(memoryStatusEx);
+    }
+
+    public Memory Memory { get; private set; }
     public Memory UpdateMemoryState() {
       try {
-        var memoryStatusEx = new WindowsStructs.MemoryStatusEx();
-        if (NativeMethods.GlobalMemoryStatusEx(memoryStatusEx))
+        
+        if (NativeMethods.GlobalMemoryStatusEx(ref memoryStatusEx))
           Memory = new Memory(memoryStatusEx);
         else
           Logger.Error(new Win32Exception(Marshal.GetLastWin32Error()));

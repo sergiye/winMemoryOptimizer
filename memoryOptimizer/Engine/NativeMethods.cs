@@ -21,9 +21,10 @@ namespace memoryOptimizer {
     [DllImport("psapi.dll", SetLastError = true)]
     internal static extern bool EmptyWorkingSet(IntPtr hProcess);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool GlobalMemoryStatusEx([In, Out] WindowsStructs.MemoryStatusEx lpBuffer);
+    internal static extern bool GlobalMemoryStatusEx(ref WindowsStructs.MemoryStatusEx lpBuffer);
 
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]

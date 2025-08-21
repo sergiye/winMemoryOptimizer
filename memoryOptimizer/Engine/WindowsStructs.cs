@@ -12,7 +12,7 @@ namespace memoryOptimizer {
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-    public class MemoryStatusEx {
+    public struct MemoryStatusEx {
       public readonly uint Length; // The size of the structure, in bytes.
       public uint MemoryLoad; // A number between 0 and 100 that specifies the approximate percentage of physical memory that is in use.
       public ulong TotalPhys; // The amount of actual physical memory, in bytes.

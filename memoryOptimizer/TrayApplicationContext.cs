@@ -22,6 +22,7 @@ namespace memoryOptimizer {
     private readonly SynchronizationContext uiContext;
     private readonly ComputerService computer;
     private readonly StartupManager startupManager;
+    private ToolStripLabel statusMenuLabel;
     private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
@@ -33,7 +34,7 @@ namespace memoryOptimizer {
     private readonly Font smallFont;
     private bool isBusy;
     private string iconValue;
-
+    private DateTimeOffset lastRun;
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
     private byte optimizationProgressPercentage;
@@ -51,6 +52,9 @@ namespace memoryOptimizer {
       //  if (e.Button != MouseButtons.Left) return;
       //  var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
       //  mi?.Invoke(notifyIcon, null);
+      //};
+      //notifyIcon.MouseMove += (s, e) => {
+      //  notifyIcon.Text = DateTime.Now.ToString("T"); // например, текущее время
       //};
       notifyIcon.DoubleClick += MenuItemOptimizeClick;
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
@@ -115,6 +119,13 @@ namespace memoryOptimizer {
       notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, icon);
     }
 
+    const string memUsedFormat = "Memory used:\nPhysical: {0:0.00} {1}";
+    const string memUsedWithVirtualFormat = "Memory used:\nPhysical: {0:0.00} {1}\nVirtual: {2:0.00} {3}";
+    const string memAvailableFormat = "Memory available:\nPhysical: {0:0.00} {1}";
+    const string memAvailableWithVirtualFormat = "Memory available:\nPhysical: {0:0.00} {1}\nVirtual: {2:0.00} {3}";
+    const string memUsageFormat = "Memory usage:\nPhysical: {0}%";
+    const string memUsageWithVirtualFormat = "Memory usage:\nPhysical: {0}%\nVirtual: {1}%";
+
     private void Update() {
       if (notifyIcon == null)
         return;
@@ -122,36 +133,43 @@ namespace memoryOptimizer {
       string newIconValue = null;
       string iconText = null;
       var memory = computer.UpdateMemoryState(); 
-      if (memory != null) {
-        switch (Settings.TrayIconMode) {
-          case Enums.TrayIconMode.MemoryUsage:
+      switch (Settings.TrayIconMode) {
+        case Enums.TrayIconMode.MemoryUsed:
+          newIconValue = memory.Physical.Used.Value.ToTrayValue();
+          iconText = !Settings.ShowVirtualMemory
+            ? string.Format(memUsedFormat, memory.Physical.Used.Value, memory.Physical.Used.Unit)
+            : string.Format(memUsedWithVirtualFormat, memory.Physical.Used.Value, memory.Physical.Used.Unit, memory.Virtual.Used.Value, memory.Physical.Used.Unit);
+          break;
+        case Enums.TrayIconMode.MemoryAvailable:
+          newIconValue = memory.Physical.Free.Value.ToTrayValue();
+          iconText = !Settings.ShowVirtualMemory
+            ? string.Format(memAvailableFormat, memory.Physical.Free.Value, memory.Physical.Free.Unit)
+            : string.Format(memAvailableWithVirtualFormat, memory.Physical.Free.Value, memory.Physical.Free.Unit, memory.Virtual.Free.Value, memory.Physical.Free.Unit);
+          break;
+        case Enums.TrayIconMode.Image:
+        case Enums.TrayIconMode.MemoryUsage:
+        default:
+          if (Settings.TrayIconMode == Enums.TrayIconMode.MemoryUsage)
             newIconValue = $"{memory.Physical.Used.Percentage:0}";
-            iconText = $"Memory usage{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
-            if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%";
-            break;
-          case Enums.TrayIconMode.MemoryUsed:
-            newIconValue = memory.Physical.Used.Value.ToTrayValue();
-            iconText = $"Memory used{Environment.NewLine}Physical: {memory.Physical.Used.Value:0.00} {memory.Physical.Used.Unit}";
-            if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Value:0.00} {memory.Physical.Used.Unit}";
-            break;
-          case Enums.TrayIconMode.MemoryAvailable:
-            newIconValue = memory.Physical.Free.Value.ToTrayValue();
-            iconText = $"Memory available{Environment.NewLine}Physical: {memory.Physical.Free.Value:0.00} {memory.Physical.Free.Unit}";
-            if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Free.Value:0.00} {memory.Physical.Free.Unit}";
-            break;
-          case Enums.TrayIconMode.Image:
-          default:
-            iconText = $"Memory usage{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
-            if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%";
-            break;
-        }
+          iconText = !Settings.ShowVirtualMemory
+            ? string.Format(memUsageFormat, memory.Physical.Used.Percentage)
+            : string.Format(memUsageWithVirtualFormat, memory.Physical.Used.Percentage, memory.Virtual.Used.Percentage);
+          break;
       }
 
-      notifyIcon.Text = iconText;
+      if (notifyIcon.Text != iconText)
+        notifyIcon.Text = iconText;
+
+      if (lastRun != DateTimeOffset.MinValue) {
+        iconText += $"{Environment.NewLine}Last run: {lastRun:G}";
+      }
+      if (Settings.AutoOptimizationInterval > 0) {
+        var nextRun = lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
+        iconText += $"{Environment.NewLine}Next run: {nextRun:G}";
+      }
+      if (iconText != statusMenuLabel.Text) {
+        ExecuteInUiThread(() => { statusMenuLabel.Text = iconText; });
+      }
 
       if (iconValue == newIconValue)
         return;
@@ -415,6 +433,7 @@ namespace memoryOptimizer {
         var tempVirtualAvailable = computer.Memory.Virtual.Free.Bytes;
 
         computer.Optimize(Settings.MemoryAreas);
+        lastRun = DateTimeOffset.Now;
 
         if (Settings.ShowOptimizationNotifications) {
           var memory = computer.UpdateMemoryState();
@@ -447,8 +466,13 @@ namespace memoryOptimizer {
     } 
     
     private void AddMenuItems() {
-      
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Optimize now", null, MenuItemOptimizeClick));
+
+      var menuImage = imageIcon.ToBitmap();
+      //notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem(Updater.ApplicationTitle, menuImage, (_, _) => { Updater.VisitAppSite(); }));
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Optimize now", menuImage, MenuItemOptimizeClick));
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+      statusMenuLabel = new ToolStripLabel() { TextAlign = ContentAlignment.MiddleLeft };
+      notifyIcon.ContextMenuStrip.Items.Add(statusMenuLabel);
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
       //auto-start
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto-start application", null, (sender, _) => {
