@@ -510,28 +510,31 @@ namespace memoryOptimizer {
       }
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
 
-      optimizationTypesMenu = new ToolStripMenuItem("Optimization types") {
-        DropDownItems = {
-          new ToolStripMenuItem("Processes working set", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.ProcessesWorkingSet);
-          }) {Tag = Enums.MemoryAreas.ProcessesWorkingSet},
-          new ToolStripMenuItem("System working set", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.SystemWorkingSet);
-          }) {Tag = Enums.MemoryAreas.SystemWorkingSet},
-          new ToolStripMenuItem("Combined page list", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.CombinedPageList);
-          }) {Tag = Enums.MemoryAreas.CombinedPageList},
-          new ToolStripMenuItem("Modified page list", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.ModifiedPageList);
-          }) {Tag = Enums.MemoryAreas.ModifiedPageList},
-          new ToolStripMenuItem("Standby list", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.StandbyList);
-          }) {Tag = Enums.MemoryAreas.StandbyList},
-          new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
-            ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
-          }) {Tag = Enums.MemoryAreas.StandbyListLowPriority},
-        }
-      };
+      optimizationTypesMenu = new ToolStripMenuItem("Optimization types");
+      if (OperatingSystem.HasProcessesWorkingSet) 
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Processes working set", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.ProcessesWorkingSet);
+        }) { Tag = Enums.MemoryAreas.ProcessesWorkingSet });
+      if (OperatingSystem.HasSystemWorkingSet)
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System working set", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.SystemWorkingSet);
+        }) { Tag = Enums.MemoryAreas.SystemWorkingSet });
+      if (OperatingSystem.HasCombinedPageList)
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Combined page list", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.CombinedPageList);
+        }) { Tag = Enums.MemoryAreas.CombinedPageList });
+      if (OperatingSystem.HasModifiedPageList) 
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified page list", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.ModifiedPageList);
+        }) { Tag = Enums.MemoryAreas.ModifiedPageList });
+      if (OperatingSystem.HasStandbyList) {
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.StandbyList);
+        }) { Tag = Enums.MemoryAreas.StandbyList });
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
+        }) { Tag = Enums.MemoryAreas.StandbyListLowPriority });
+      }
       notifyIcon.ContextMenuStrip.Items.Add(optimizationTypesMenu);
       
       //settings
