@@ -19,8 +19,8 @@ namespace memoryOptimizer {
 
     private readonly Icon imageIcon;
     private readonly NotifyIcon notifyIcon;
-    private readonly Computer computer;
-    private readonly ComputerService computerService;
+    private readonly SynchronizationContext uiContext;
+    private readonly ComputerService computer;
     private readonly StartupManager startupManager;
     private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem autoOptimizeEveryMenu;
@@ -31,17 +31,12 @@ namespace memoryOptimizer {
     private readonly Graphics graphics;
     private readonly Font font;
     private readonly Font smallFont;
-    private readonly Color iconBackColor = Color.Transparent;
     private bool isBusy;
-    private string prevIconValue = null;
+    private string iconValue;
 
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
-
-    // private byte optimizationProgressTotal = byte.MaxValue;
-    // private byte optimizationProgressPercentage;
-    // private byte optimizationProgressValue = byte.MinValue;
-    // private string optimizationProgressStep = "Optimize";
+    private byte optimizationProgressPercentage;
 
     public TrayApplicationContext() {
       imageIcon = Icon.ExtractAssociatedIcon(Updater.CurrentFileLocation);
@@ -57,9 +52,10 @@ namespace memoryOptimizer {
       //  var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
       //  mi?.Invoke(notifyIcon, null);
       //};
-      notifyIcon.DoubleClick += (_, _) => { OptimizeAsync(); };
+      notifyIcon.DoubleClick += MenuItemOptimizeClick;
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
-
+      uiContext = SynchronizationContext.Current;
+      
       float dpiX, dpiY;
       using (var b = new Bitmap(1, 1, PixelFormat.Format32bppArgb)) {
         dpiX = b.HorizontalResolution;
@@ -89,11 +85,8 @@ namespace memoryOptimizer {
       );
 
       startupManager = new StartupManager();
-      computerService = new ComputerService();
-      computerService.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
-      computer = new Computer {
-        OperatingSystem = computerService.OperatingSystem
-      };
+      computer = new ComputerService();
+      computer.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
 
       AddMenuItems();
       Theme.SetAutoTheme();
@@ -104,17 +97,20 @@ namespace memoryOptimizer {
     public bool IsBusy {
       get => isBusy;
       set {
-        Loading(value);
+        //Mouse.OverrideCursor = value ? Cursors.Wait : null;
+        if (notifyIcon?.ContextMenuStrip != null)
+          ExecuteInUiThread(() => notifyIcon.ContextMenuStrip.Enabled = !value);
         isBusy = value;
       }
     }
 
-    private void Loading(bool running) {
-      //Mouse.OverrideCursor = running ? Cursors.Wait : null;
-      if (notifyIcon?.ContextMenuStrip != null)
-        notifyIcon.ContextMenuStrip.Enabled = !running;
+    private void ExecuteInUiThread(Action action) {
+      if (uiContext != null)
+        uiContext.Post(_ => action?.Invoke(), null);
+      else
+        action?.Invoke();
     }
-
+    
     private void Notify(string message, string title = null, int timeout = 5, ToolTipIcon icon = ToolTipIcon.None) {
       notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, icon);
     }
@@ -123,72 +119,106 @@ namespace memoryOptimizer {
       if (notifyIcon == null)
         return;
 
-      string iconValue = null;
+      string newIconValue = null;
       string iconText = null;
-      if (computer?.Memory != null) {
+      var memory = computer.UpdateMemoryState(); 
+      if (memory != null) {
         switch (Settings.TrayIconMode) {
           case Enums.TrayIconMode.MemoryUsage:
-            iconValue = $"{computer.Memory.Physical.Used.Percentage:0}";
-            iconText = $"{"Memory usage"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
+            newIconValue = $"{memory.Physical.Used.Percentage:0}";
+            iconText = $"Memory usage{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
             if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%";
+              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%";
             break;
           case Enums.TrayIconMode.MemoryUsed:
-            iconValue = computer.Memory.Physical.Used.Value.ToTrayValue();
-            iconText = $"{"Memory used"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Value:0.00} {computer.Memory.Physical.Used.Unit}";
+            newIconValue = memory.Physical.Used.Value.ToTrayValue();
+            iconText = $"Memory used{Environment.NewLine}Physical: {memory.Physical.Used.Value:0.00} {memory.Physical.Used.Unit}";
             if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Value:0.00} {computer.Memory.Physical.Used.Unit}";
+              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Value:0.00} {memory.Physical.Used.Unit}";
             break;
           case Enums.TrayIconMode.MemoryAvailable:
-            iconValue = computer.Memory.Physical.Free.Value.ToTrayValue();
-            iconText = $"{"Memory available"}{Environment.NewLine}Physical: {computer.Memory.Physical.Free.Value:0.00} {computer.Memory.Physical.Free.Unit}";
+            newIconValue = memory.Physical.Free.Value.ToTrayValue();
+            iconText = $"Memory available{Environment.NewLine}Physical: {memory.Physical.Free.Value:0.00} {memory.Physical.Free.Unit}";
             if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Free.Value:0.00} {computer.Memory.Physical.Free.Unit}";
+              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Free.Value:0.00} {memory.Physical.Free.Unit}";
             break;
           case Enums.TrayIconMode.Image:
           default:
-            iconText = $"{"Memory usage"}{Environment.NewLine}Physical: {computer.Memory.Physical.Used.Percentage}%";
+            iconText = $"Memory usage{Environment.NewLine}Physical: {memory.Physical.Used.Percentage}%";
             if (Settings.ShowVirtualMemory)
-              iconText += $"{Environment.NewLine}Virtual: {computer.Memory.Virtual.Used.Percentage}%";
+              iconText += $"{Environment.NewLine}Virtual: {memory.Virtual.Used.Percentage}%";
             break;
         }
       }
 
       notifyIcon.Text = iconText;
 
-      if (prevIconValue == iconValue)
+      if (iconValue == newIconValue)
         return;
 
-      prevIconValue = iconValue;
-      if (string.IsNullOrEmpty(iconValue)) {
+      iconValue = newIconValue;
+      UpdateIcon();
+    }
+
+    private void UpdateIcon() {
+      if (string.IsNullOrEmpty(iconValue) && optimizationProgressPercentage == 0) {
         notifyIcon.Icon = imageIcon;
       }
       else {
         try {
-          var small = iconValue.Length > 2;
           var color = Settings.TrayIconValueColor;
+          var iconBackColor = Color.Transparent;
           graphics.Clear(iconBackColor);
-          if (small) {
-            if (iconValue[1] == '.' || iconValue[1] == ',') {
-              var bigPart = iconValue.Substring(0, 1);
-              var smallPart = iconValue.Substring(1);
-              TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
-                iconBackColor, TextFormatFlags.VerticalCenter);
-              TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
-                iconBackColor, TextFormatFlags.Bottom);
+
+          if (optimizationProgressPercentage > 0) {
+            var rect = new Rectangle(1, 1, bitmap.Width - 2, bitmap.Height - 2);
+            // var backColor = NativeMethods.GetTaskbarColor(); 
+            // using (var b = new SolidBrush(backColor))
+            //   graphics.FillEllipse(b, rect);
+            var sweepAngle = 360f * optimizationProgressPercentage / 100f;
+            if (sweepAngle > 0) {
+              using (var b = new SolidBrush(color))
+                graphics.FillPie(b, rect, -90, sweepAngle);
+            }
+            using (var p = new Pen(color, 1))
+              graphics.DrawEllipse(p, rect);
+      
+            // var text = value.ToString(); //optimizationProgressPercentage.ToString();
+            // using (var path = new GraphicsPath()) {
+            //   var emSize = graphics.DpiY * smallFont.Size / 72;
+            //   var format = new StringFormat {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};
+            //   path.AddString(text, smallFont.FontFamily, (int) smallFont.Style, emSize, new RectangleF(0, 0, bitmap.Width, bitmap.Height), format);
+            //   using (var outline = new Pen(fillColor, 2)) {
+            //     outline.LineJoin = LineJoin.Round;
+            //     graphics.DrawPath(outline, path);
+            //   }
+            //   using (var brush = new SolidBrush(backColor)) graphics.FillPath(brush, path);
+            // }
+          }
+          else {
+            var small = iconValue.Length > 2;
+            if (small) {
+              if (iconValue[1] == '.' || iconValue[1] == ',') {
+                var bigPart = iconValue.Substring(0, 1);
+                var smallPart = iconValue.Substring(1);
+                TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
+                  iconBackColor, TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
+                  iconBackColor, TextFormatFlags.Bottom);
+              }
+              else {
+                var size = TextRenderer.MeasureText(iconValue, smallFont);
+                TextRenderer.DrawText(graphics, iconValue, smallFont,
+                  new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
+                  TextFormatFlags.VerticalCenter);
+              }
             }
             else {
-              var size = TextRenderer.MeasureText(iconValue, smallFont);
-              TextRenderer.DrawText(graphics, iconValue, smallFont,
+              var size = TextRenderer.MeasureText(iconValue, font);
+              TextRenderer.DrawText(graphics, iconValue, font,
                 new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
                 TextFormatFlags.VerticalCenter);
             }
-          }
-          else {
-            var size = TextRenderer.MeasureText(iconValue, font);
-            TextRenderer.DrawText(graphics, iconValue, font,
-              new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
-              TextFormatFlags.VerticalCenter);
           }
 
           var handle = bitmap.GetHicon();
@@ -201,36 +231,46 @@ namespace memoryOptimizer {
         }
       }
     }
-
+    
     private void OnOptimizeProgressUpdate(byte value, string step) {
-      // optimizationProgressPercentage = (byte) (value * 100 / optimizationProgressTotal);
-      // optimizationProgressStep = step;
-      // optimizationProgressValue = value;
-      // if (Settings.ShowOptimizationNotifications)
-      //   Notify($"Step: {step}", $"{optimizationProgressPercentage}% optimized", 1, Enums.Icon.Notification.Information);
+      var stepsCount = GetEnabledMemoryAreasCount();
+      if (value > stepsCount)
+        optimizationProgressPercentage = 0;
+      else
+        optimizationProgressPercentage = (byte) (value * 100 / stepsCount);
+      UpdateIcon();
     }
 
-    public Enums.MemoryAreas MemoryAreas {
-      get {
-        if (!computer.OperatingSystem.HasCombinedPageList)
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.CombinedPageList;
-
-        if (!computer.OperatingSystem.HasModifiedPageList)
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedPageList;
-
-        if (!computer.OperatingSystem.HasProcessesWorkingSet)
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.ProcessesWorkingSet;
-
-        if (!computer.OperatingSystem.HasStandbyList) {
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
-        }
-
-        if (!computer.OperatingSystem.HasSystemWorkingSet)
-          Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemWorkingSet;
-
-        return Settings.MemoryAreas;
+    private static Enums.MemoryAreas GetEnabledMemoryAreas() {
+      if (!OperatingSystem.HasCombinedPageList)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.CombinedPageList;
+      if (!OperatingSystem.HasModifiedPageList)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedPageList;
+      if (!OperatingSystem.HasProcessesWorkingSet)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.ProcessesWorkingSet;
+      if (!OperatingSystem.HasStandbyList) {
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
       }
+      if (!OperatingSystem.HasSystemWorkingSet)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemWorkingSet;
+      return Settings.MemoryAreas;
+    }
+
+    private static int GetEnabledMemoryAreasCount() {
+      var result = 0;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.CombinedPageList))
+        result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.ModifiedPageList))
+        result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.ProcessesWorkingSet))
+        result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyList) ||
+        Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyListLowPriority))
+        result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.SystemWorkingSet))
+        result++;
+      return result;
     }
 
     private void ToggleMemoryArea(Enums.MemoryAreas value) {
@@ -257,8 +297,6 @@ namespace memoryOptimizer {
       }  
     }
     
-    public bool CanOptimize => MemoryAreas != Enums.MemoryAreas.None;
-
     private static void SetPriority(Enums.Priority priority) {
       bool priorityBoostEnabled;
       ProcessPriorityClass processPriorityClass;
@@ -339,26 +377,26 @@ namespace memoryOptimizer {
           if (IsBusy)
             continue;
 
-          computer.Memory = computerService.Memory;
-          Update();
-
-          if (CanOptimize) {
+          if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
             if (Settings.AutoOptimizationInterval > 0 &&
                 DateTimeOffset.Now.Subtract(lastAutoOptimizationByInterval).TotalHours >= Settings.AutoOptimizationInterval) {
-              OptimizeAsync();
+              Optimize();
               lastAutoOptimizationByInterval = DateTimeOffset.Now;
             }
             else {
+              computer.UpdateMemoryState();
               if (Settings.AutoOptimizationMemoryUsage > 0 &&
                   computer.Memory.Physical.Free.Percentage < Settings.AutoOptimizationMemoryUsage &&
                   DateTimeOffset.Now.Subtract(lastAutoOptimizationByMemoryUsage).TotalMinutes >= AutoOptimizationMemoryUsageInterval) {
-                OptimizeAsync();
+                Optimize();
                 lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
               }
             }
           }
+          
+          Update();
 
-          await Task.Delay(Settings.UpdateIntervalSeconds * 1000);
+          await Task.Delay(Settings.UpdateIntervalSeconds * 1000).ConfigureAwait(false);
         }
         catch (Exception ex) {
           Logger.Debug(ex.GetMessage());
@@ -376,21 +414,19 @@ namespace memoryOptimizer {
         var tempPhysicalAvailable = computer.Memory.Physical.Free.Bytes;
         var tempVirtualAvailable = computer.Memory.Virtual.Free.Bytes;
 
-        computerService.Optimize(Settings.MemoryAreas);
-        computer.Memory = computerService.Memory;
+        computer.Optimize(Settings.MemoryAreas);
 
         if (Settings.ShowOptimizationNotifications) {
-          var physicalReleased = (computer.Memory.Physical.Free.Bytes > tempPhysicalAvailable
-              ? computer.Memory.Physical.Free.Bytes - tempPhysicalAvailable
-              : tempPhysicalAvailable - computer.Memory.Physical.Free.Bytes).ToMemoryUnit();
-          var virtualReleased = (computer.Memory.Virtual.Free.Bytes > tempVirtualAvailable
-              ? computer.Memory.Virtual.Free.Bytes - tempVirtualAvailable
-              : tempVirtualAvailable - computer.Memory.Virtual.Free.Bytes).ToMemoryUnit();
-
+          var memory = computer.UpdateMemoryState();
+          var physicalReleased = (memory.Physical.Free.Bytes > tempPhysicalAvailable
+            ? memory.Physical.Free.Bytes - tempPhysicalAvailable
+            : tempPhysicalAvailable - memory.Physical.Free.Bytes).ToMemoryUnit();
+          var virtualReleased = (memory.Virtual.Free.Bytes > tempVirtualAvailable
+            ? memory.Virtual.Free.Bytes - tempVirtualAvailable
+            : tempVirtualAvailable - memory.Virtual.Free.Bytes).ToMemoryUnit();
           var message = Settings.ShowVirtualMemory
             ? $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value} | Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}"
             : $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
-
           Notify(message);
         }
       }
@@ -402,16 +438,17 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeAsync() {
-      if (!IsBusy)
-        Task.Run(Optimize);
-    }
-
+    private void MenuItemOptimizeClick(object sender, EventArgs e) {
+      if (IsBusy) return;
+      Task.Run(() => {
+        Optimize();
+        Update();
+      });
+    } 
+    
     private void AddMenuItems() {
       
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Optimize now", null, (_, _) => {
-        OptimizeAsync();
-      }));
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Optimize now", null, MenuItemOptimizeClick));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
       //auto-start
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto-start application", null, (sender, _) => {
@@ -513,7 +550,7 @@ namespace memoryOptimizer {
           dialog.Color = Settings.TrayIconValueColor;
           if (dialog.ShowDialog() != DialogResult.OK) return;
           Settings.TrayIconValueColor = dialog.Color;
-          Update();
+          UpdateIcon();
         }
       }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());

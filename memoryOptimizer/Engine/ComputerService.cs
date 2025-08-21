@@ -9,36 +9,22 @@ using System.Text;
 namespace memoryOptimizer {
   
   internal class ComputerService {
-
-    private Memory memory = new Memory(new WindowsStructs.MemoryStatusEx());
-    private OperatingSystem operatingSystem;
-
-    public Memory Memory {
-      get {
-        try {
-          var memoryStatusEx = new WindowsStructs.MemoryStatusEx();
-
-          if (!NativeMethods.GlobalMemoryStatusEx(memoryStatusEx))
-            Logger.Error(new Win32Exception(Marshal.GetLastWin32Error()));
-
-          memory = new Memory(memoryStatusEx);
-        }
-        catch (Exception e) {
-          Logger.Error(e.Message);
-        }
-
-        return memory;
+    
+    public Memory Memory { get; private set; } = new Memory(new WindowsStructs.MemoryStatusEx());
+    public Memory UpdateMemoryState() {
+      try {
+        var memoryStatusEx = new WindowsStructs.MemoryStatusEx();
+        if (NativeMethods.GlobalMemoryStatusEx(memoryStatusEx))
+          Memory = new Memory(memoryStatusEx);
+        else
+          Logger.Error(new Win32Exception(Marshal.GetLastWin32Error()));
       }
+      catch (Exception e) {
+        Logger.Error(e.Message);
+      }
+      return Memory;
     }
-
-    public OperatingSystem OperatingSystem =>
-      operatingSystem ??= new OperatingSystem {
-        Is64Bit = Environment.Is64BitOperatingSystem,
-        IsWindows8OrGreater = Environment.OSVersion.Version.Major >= 6.2,
-        IsWindowsVistaOrGreater = Environment.OSVersion.Version.Major >= 6,
-        IsWindowsXpOrGreater = Environment.OSVersion.Version.Major >= 5.1
-      };
-
+    
     public event Action<byte, string> OnOptimizeProgressUpdate;
 
     private static bool SetIncreasePrivilege(string privilegeName) {
@@ -216,7 +202,7 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeCombinedPageList() {
+    private static void OptimizeCombinedPageList() {
       if (!OperatingSystem.HasCombinedPageList)
         throw new Exception("The Combined Page List optimization is not supported on this operating system version");
 
@@ -245,7 +231,7 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeModifiedPageList() {
+    private static void OptimizeModifiedPageList() {
       if (!OperatingSystem.HasModifiedPageList)
         throw new Exception("The Modified Page List optimization is not supported on this operating system version");
 
@@ -273,7 +259,7 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeProcessesWorkingSet() {
+    private static void OptimizeProcessesWorkingSet() {
       if (!OperatingSystem.HasProcessesWorkingSet)
         throw new Exception("The Processes Working Set optimization is not supported on this operating system version");
 
@@ -304,7 +290,7 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeStandbyList(bool lowPriority = false) {
+    private static void OptimizeStandbyList(bool lowPriority = false) {
       if (!OperatingSystem.HasStandbyList)
         throw new Exception("The Standby List optimization is not supported on this operating system version");
 
@@ -334,7 +320,7 @@ namespace memoryOptimizer {
       }
     }
 
-    private void OptimizeSystemWorkingSet() {
+    private static void OptimizeSystemWorkingSet() {
       if (!OperatingSystem.HasSystemWorkingSet)
         throw new Exception("The System Working Set optimization is not supported on this operating system version");
 
@@ -344,7 +330,6 @@ namespace memoryOptimizer {
       var handle = GCHandle.Alloc(0);
       try {
         object systemCacheInformation;
-
         if (OperatingSystem.Is64Bit)
           systemCacheInformation = new WindowsStructs.SystemCacheInformation64
             {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
@@ -353,9 +338,7 @@ namespace memoryOptimizer {
             {MinimumWorkingSet = uint.MaxValue, MaximumWorkingSet = uint.MaxValue};
 
         handle = GCHandle.Alloc(systemCacheInformation, GCHandleType.Pinned);
-
         var length = Marshal.SizeOf(systemCacheInformation);
-
         if (NativeMethods.NtSetSystemInformation(Constants.Windows.SystemInformationClass.SystemFileCacheInformation,
               handle.AddrOfPinnedObject(), length) != Constants.Windows.SystemErrorCode.ErrorSuccess)
           throw new Win32Exception(Marshal.GetLastWin32Error());

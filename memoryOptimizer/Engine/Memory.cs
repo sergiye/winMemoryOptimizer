@@ -4,11 +4,6 @@ namespace memoryOptimizer {
   
   internal class Memory {
     
-    public Memory() {
-      Physical = new MemoryStats(0, 0, 0);
-      Virtual = new MemoryStats(0, 0, 0);
-    }
-
     public Memory(WindowsStructs.MemoryStatusEx memoryStatusEx) {
       if (memoryStatusEx == null)
         throw new ArgumentNullException("memoryStatusEx");
