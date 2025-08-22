@@ -2,11 +2,9 @@
 
 [![Release (latest)](https://img.shields.io/github/v/release/sergiye/TrayRAMBooster)](https://github.com/sergiye/TrayRAMBooster/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/sergiye/TrayRAMBooster/total?color=ff4f42)](https://github.com/sergiye/TrayRAMBooster/releases)
-![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/TrayRAMBooster?color=00AD00)
-
-[![](https://img.shields.io/badge/WINDOWS-XP%20%E2%80%93%2011-blue)](#TrayRAMBooster) 
-[![](https://img.shields.io/badge/SERVER-2003%20%E2%80%93%202025-blue)](#TrayRAMBooster) 
-[![](https://img.shields.io/github/license/sergiye/TrayRAMBooster?color=2ea44f)](/LICENSE) 
+[![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/TrayRAMBooster?color=00AD00)](https://github.com/sergiye/trayRAMbooster/commits/master)
+[![](https://img.shields.io/badge/WINDOWS-7%20%E2%80%93%2011-blue)](https://endoflife.date/windows) 
+[![](https://img.shields.io/badge/SERVER-2012%20%E2%80%93%202025-blue)](https://endoflife.date/windows-server) 
 
 TrayRAMBooster uses native Windows features to clear and optimize memory areas. Sometimes, programs do not release the allocated memory, making the computer slow. That is when you need to optimize the memory so you can keep working without wasting time restarting your system. 
 
