@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Memory Optimizer")]
-[assembly: AssemblyDescription("Memory optimization mini tool for windows")]
+[assembly: AssemblyTitle("Tray RAM Booster")]
+[assembly: AssemblyDescription("Tray RAM Booster mini tool for windows")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("SergiyE")]
-[assembly: AssemblyProduct("memoryOptimizer")]
+[assembly: AssemblyProduct("TrayRAMBooster")]
 [assembly: AssemblyCopyright("Copyright © 2025. Sergiy Egoshin. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

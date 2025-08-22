@@ -1,9 +1,9 @@
-﻿namespace memoryOptimizer {
+﻿namespace TrayRAMBooster {
   
   internal static class Constants {
     
     public static class RegistryKey {
-      public const string Settings = @"SOFTWARE\sergiye\memoryOptimizer";
+      public const string Settings = @"SOFTWARE\sergiye\TrayRAMBooster";
       public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
     }
 

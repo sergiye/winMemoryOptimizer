@@ -1,8 +1,8 @@
-﻿using sergiye.Common;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using sergiye.Common;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
   
   internal class Program {
     

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
 
   internal static class ExtensionMethods {
 

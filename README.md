@@ -1,14 +1,14 @@
-# Memory Optimizer
+# Tray RAM Booster
 
-[![Release (latest)](https://img.shields.io/github/v/release/sergiye/memoryOptimizer)](https://github.com/sergiye/memoryOptimizer/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/sergiye/memoryOptimizer/total?color=ff4f42)](https://github.com/sergiye/memoryOptimizer/releases)
-![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/memoryOptimizer?color=00AD00)
+[![Release (latest)](https://img.shields.io/github/v/release/sergiye/TrayRAMBooster)](https://github.com/sergiye/TrayRAMBooster/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/sergiye/TrayRAMBooster/total?color=ff4f42)](https://github.com/sergiye/TrayRAMBooster/releases)
+![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/TrayRAMBooster?color=00AD00)
 
-[![](https://img.shields.io/badge/WINDOWS-XP%20%E2%80%93%2011-blue)](#memoryOptimizer) 
-[![](https://img.shields.io/badge/SERVER-2003%20%E2%80%93%202025-blue)](#memoryOptimizer) 
-[![](https://img.shields.io/github/license/sergiye/memoryOptimizer?color=2ea44f)](/LICENSE) 
+[![](https://img.shields.io/badge/WINDOWS-XP%20%E2%80%93%2011-blue)](#TrayRAMBooster) 
+[![](https://img.shields.io/badge/SERVER-2003%20%E2%80%93%202025-blue)](#TrayRAMBooster) 
+[![](https://img.shields.io/github/license/sergiye/TrayRAMBooster?color=2ea44f)](/LICENSE) 
 
-This free RAM optimizer uses native Windows features to clear and optimize memory areas. Sometimes, programs do not release the allocated memory, making the computer slow. That is when you need to optimize the memory so you can keep working without wasting time restarting your system. 
+TrayRAMBooster uses native Windows features to clear and optimize memory areas. Sometimes, programs do not release the allocated memory, making the computer slow. That is when you need to optimize the memory so you can keep working without wasting time restarting your system. 
 
 This tool is inspired by the [Igor Mundstein's WinMemoryCleaner project](https://github.com/IgorMundstein/WinMemoryCleaner).
 The main idea was to create super-minimalistic and portable application with all functionality.
@@ -21,16 +21,16 @@ It's portable, and you do not need to install it, but it requires administrator 
 
 Here's a preview of the app's UI running on Windows 10:
 
-[<img src="https://github.com/sergiye/memoryOptimizer/raw/master/preview.png" alt="preview"/>](https://github.com/sergiye/memoryOptimizer/raw/master/preview.png)
+[<img src="https://github.com/sergiye/TrayRAMBooster/raw/master/preview.png" alt="preview"/>](https://github.com/sergiye/TrayRAMBooster/raw/master/preview.png)
 
 and a preview of the app notification after optimization completed:
 
-[<img src="https://github.com/sergiye/memoryOptimizer/raw/master/preview_notification.png" alt="preview_notification"/>](https://github.com/sergiye/memoryOptimizer/raw/master/preview_notification.png)
+[<img src="https://github.com/sergiye/TrayRAMBooster/raw/master/preview_notification.png" alt="preview_notification"/>](https://github.com/sergiye/TrayRAMBooster/raw/master/preview_notification.png)
 
 ## Download Latest Version
 
-The published version can be obtained from [releases](https://github.com/sergiye/memoryOptimizer/releases) page, or get the newer one directly from:
-[Latest Version](https://github.com/sergiye/memoryOptimizer/releases/latest)
+The published version can be obtained from [releases](https://github.com/sergiye/TrayRAMBooster/releases) page, or get the newer one directly from:
+[Latest Version](https://github.com/sergiye/TrayRAMBooster/releases/latest)
 
 ## Features
 
@@ -105,16 +105,16 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 You should have received a copy of the GNU General Public License  along with this program.  If not, see http://www.gnu.org/licenses/.
 
 ## How can I help improve it?
-The memoryOptimizer team welcomes feedback and contributions!<br/>
+The TrayRAMBooster team welcomes feedback and contributions!<br/>
 You can check if it works properly on your PC. If you notice any inaccuracies, please send us a pull request. If you have any suggestions or improvements, don't hesitate to create an issue.
 
 Also, don't forget to star the repository to help other people find it.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sergiye/memoryOptimizer&type=Date)](https://star-history.com/#sergiye/memoryOptimizer&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=sergiye/TrayRAMBooster&type=Date)](https://star-history.com/#sergiye/TrayRAMBooster&Date)
 
-<!-- [//]: # ([![Stargazers over time]&#40;https://starchart.cc/sergiye/memoryOptimizer.svg?variant=adaptive&#41;]&#40;https://starchart.cc/sergiye/memoryOptimizer&#41;) -->
+<!-- [//]: # ([![Stargazers over time]&#40;https://starchart.cc/sergiye/TrayRAMBooster.svg?variant=adaptive&#41;]&#40;https://starchart.cc/sergiye/TrayRAMBooster&#41;) -->
 
-[![Stargazers for @sergiye/memoryOptimizer](https://reporoster.com/stars/sergiye/memoryOptimizer)](https://github.com/sergiye/memoryOptimizer/stargazers)
+[![Stargazers for @sergiye/TrayRAMBooster](https://reporoster.com/stars/sergiye/TrayRAMBooster)](https://github.com/sergiye/TrayRAMBooster/stargazers)
 
 ## Donate!
 Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.

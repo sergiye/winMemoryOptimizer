@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
 
   internal static class Enums {
     

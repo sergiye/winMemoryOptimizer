@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
 
   internal class Log {
 

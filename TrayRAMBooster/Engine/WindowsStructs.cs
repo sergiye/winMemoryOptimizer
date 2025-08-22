@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
 
   internal static class WindowsStructs {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

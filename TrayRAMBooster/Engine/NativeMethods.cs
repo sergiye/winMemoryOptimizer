@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
   
   internal static class NativeMethods {
     

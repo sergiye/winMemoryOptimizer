@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Microsoft.Win32;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
 
   internal static class Settings {
     private static Color trayIconValueColor;

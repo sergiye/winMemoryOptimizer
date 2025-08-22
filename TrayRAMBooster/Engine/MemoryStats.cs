@@ -1,4 +1,4 @@
-﻿namespace memoryOptimizer {
+﻿namespace TrayRAMBooster {
 
   internal class MemoryStats {
   

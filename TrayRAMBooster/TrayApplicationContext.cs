@@ -1,5 +1,4 @@
-﻿using sergiye.Common;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,8 +8,9 @@ using System.Drawing.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using sergiye.Common;
 
-namespace memoryOptimizer {
+namespace TrayRAMBooster {
   
   internal class TrayApplicationContext : ApplicationContext {
 
