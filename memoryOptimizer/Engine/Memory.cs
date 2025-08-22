@@ -1,6 +1,6 @@
 ﻿namespace memoryOptimizer {
   
-  internal struct Memory {
+  internal class Memory {
     
     public Memory(WindowsStructs.MemoryStatusEx memoryStatusEx) {
 
@@ -8,7 +8,9 @@
       Virtual = new MemoryStats(memoryStatusEx.AvailPageFile, memoryStatusEx.TotalPageFile);
     }
 
-    public MemoryStats Physical { get; private set; }
-    public MemoryStats Virtual { get; private set; }
+    public MemoryStats Physical { get; }
+    public MemoryStats Virtual { get; }
+
+    public override string ToString() => $"Physical: {Physical.Used} / {Physical.Free}\nVirtual: {Virtual.Used} / {Virtual.Free}";
   }
 }

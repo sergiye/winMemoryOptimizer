@@ -1,6 +1,6 @@
 ﻿namespace memoryOptimizer {
 
-  internal readonly struct MemoryStats {
+  internal class MemoryStats {
   
     public MemoryStats(ulong free, ulong total, uint? used = null) {
       Free = new MemorySize(free);

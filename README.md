@@ -1,12 +1,21 @@
 # Memory Optimizer
 
 [![Release (latest)](https://img.shields.io/github/v/release/sergiye/memoryOptimizer)](https://github.com/sergiye/memoryOptimizer/releases/latest)
-![Downloads](https://img.shields.io/github/downloads/sergiye/memoryOptimizer/total?color=ff4f42)
+[![Downloads](https://img.shields.io/github/downloads/sergiye/memoryOptimizer/total?color=ff4f42)](https://github.com/sergiye/memoryOptimizer/releases)
 ![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/memoryOptimizer?color=00AD00)
+
+[![](https://img.shields.io/badge/WINDOWS-XP%20%E2%80%93%2011-blue)](#memoryOptimizer) 
+[![](https://img.shields.io/badge/SERVER-2003%20%E2%80%93%202025-blue)](#memoryOptimizer) 
+[![](https://img.shields.io/github/license/sergiye/memoryOptimizer?color=2ea44f)](/LICENSE) 
 
 This free RAM optimizer uses native Windows features to clear and optimize memory areas. Sometimes, programs do not release the allocated memory, making the computer slow. That is when you need to optimize the memory so you can keep working without wasting time restarting your system. 
 
-The app has no UI, just notification icon. It's portable, and you do not need to install it, but it requires administrator privileges to run. Click on the download button below and run the executable to get started.
+This tool is inspired by the [Igor Mundstein's WinMemoryCleaner project](https://github.com/IgorMundstein/WinMemoryCleaner).
+The main idea was to create super-minimalistic and portable application with all functionality.
+
+The app has no UI, just notification icon. 
+It's portable, and you do not need to install it, but it requires administrator privileges to run. Click on the download button below and run the executable to get started.
+
 
 ## What does it look like?
 

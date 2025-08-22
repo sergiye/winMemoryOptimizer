@@ -18,18 +18,20 @@ namespace memoryOptimizer {
     }
 
     public Memory Memory { get; private set; }
-    public Memory UpdateMemoryState() {
+    
+    public bool UpdateMemoryState() {
       try {
-        
-        if (NativeMethods.GlobalMemoryStatusEx(ref memoryStatusEx))
+        if (NativeMethods.GlobalMemoryStatusEx(ref memoryStatusEx)) {
           Memory = new Memory(memoryStatusEx);
+          return true;
+        }
         else
           Logger.Error(new Win32Exception(Marshal.GetLastWin32Error()));
       }
       catch (Exception e) {
         Logger.Error(e.Message);
       }
-      return Memory;
+      return false;
     }
     
     public event Action<byte, string> OnOptimizeProgressUpdate;

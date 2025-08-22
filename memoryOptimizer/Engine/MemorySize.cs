@@ -9,10 +9,10 @@
       Value = memory.Key;
     }
 
-    public ulong Bytes { get; private set; }
+    public ulong Bytes { get; }
     public uint Percentage { get; set; }
     public Enums.MemoryUnit Unit { get; }
     public double Value { get; }
-    public override string ToString() => $"{Value:0.#} {Unit} ({Percentage}%)";
+    public override string ToString() => $"{Value:0.00} {Unit} ({Percentage}%)";
   }
 }
