@@ -22,14 +22,14 @@ jobs:
               - 'Directory.Build.props'
 
       - name: NuGet restore
-        run: nuget restore memoryOptimizer.sln
+        run: nuget restore trayRAMbooster.sln
 
       - name: Build
-        run: msbuild memoryOptimizer.sln -p:Configuration=Release -m
+        run: msbuild trayRAMbooster.sln -p:Configuration=Release -m
 
-      # - name: Publish build
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: memoryOptimizer
-      #     path: |
-      #       memoryOptimizer/bin
+      - name: Publish build
+        uses: actions/upload-artifact@v4
+        with:
+          name: trayRAMbooster
+          path: |
+            trayRAMbooster/bin
