@@ -20,7 +20,7 @@ namespace TrayRAMBooster {
     static Settings() {
       autoOptimizationInterval = 0;
       autoOptimizationMemoryUsage = 0;
-      updateIntervalSeconds = 30;
+      updateIntervalSeconds = 1;
       memoryAreas = Enums.MemoryAreas.CombinedPageList | Enums.MemoryAreas.ModifiedPageList |
                     Enums.MemoryAreas.ProcessesWorkingSet | Enums.MemoryAreas.StandbyList |
                     Enums.MemoryAreas.SystemWorkingSet;
@@ -28,9 +28,11 @@ namespace TrayRAMBooster {
       runOnPriority = Enums.Priority.Low;
       showOptimizationNotifications = true;
       showVirtualMemory = true;
-      trayIconMode = Enums.TrayIconMode.Image;
+      trayIconMode = Enums.TrayIconMode.MemoryAvailable;
       var taskbarColor = NativeMethods.GetTaskbarColor(); 
-      trayIconValueColor = taskbarColor.IsDark() ? Color.White : Color.Black;
+      trayIconValueColor = taskbarColor.IsDark() 
+        ? Color.FromArgb(int.Parse("ff00ff80", System.Globalization.NumberStyles.HexNumber)) 
+        : Color.DarkBlue;
 
       try {
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.ProcessExclusionList)) {
