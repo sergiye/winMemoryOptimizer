@@ -143,10 +143,6 @@ namespace TrayRAMBooster {
         action?.Invoke();
     }
     
-    private void Notify(string message, string title = null, int timeout = 5, ToolTipIcon icon = ToolTipIcon.None) {
-      notifyIcon?.ShowBalloonTip(timeout * 1000, title, message, icon);
-    }
-
     private string GetTrayIconText() {
       return Settings.TrayIconMode switch {
         Enums.TrayIconMode.MemoryUsed => !Settings.ShowVirtualMemory
@@ -463,9 +459,9 @@ namespace TrayRAMBooster {
             ? computer.Memory.Virtual.Free.Bytes - tempVirtualAvailable
             : tempVirtualAvailable - computer.Memory.Virtual.Free.Bytes).ToMemoryUnit();
           var message = Settings.ShowVirtualMemory
-            ? $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value} | Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}"
+            ? $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}{Environment.NewLine}Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}"
             : $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
-          Notify(message);
+          notifyIcon.ShowBalloonTip(5000, Updater.ApplicationTitle, message, ToolTipIcon.Info);
         }
       }
       catch (Exception ex) {
