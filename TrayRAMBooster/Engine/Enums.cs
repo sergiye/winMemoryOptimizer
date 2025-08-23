@@ -37,9 +37,9 @@ namespace TrayRAMBooster {
 
     public enum TrayIconMode {
       Image,
-      MemoryUsage,
+      MemoryUsagePercent,
       MemoryAvailable,
-      MemoryUsed,
+      MemoryUsageValue,
     }
 
     public enum DoubleClickAction {

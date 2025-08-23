@@ -1,4 +1,5 @@
-﻿using System;
+﻿using sergiye.Common;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -14,15 +15,15 @@ namespace TrayRAMBooster {
 
     public ComputerService() {
       memoryStatusEx = new WindowsStructs.MemoryStatusEx();
-      Memory = new Memory(memoryStatusEx);
+      Memory.Update(memoryStatusEx);
     }
 
-    public Memory Memory { get; private set; }
-    
+    public Memory Memory { get; } = new Memory();
+
     public bool UpdateMemoryState() {
       try {
         if (NativeMethods.GlobalMemoryStatusEx(ref memoryStatusEx)) {
-          Memory = new Memory(memoryStatusEx);
+          Memory.Update(memoryStatusEx);
           return true;
         }
         else
@@ -340,7 +341,7 @@ namespace TrayRAMBooster {
       var handle = GCHandle.Alloc(0);
       try {
         object systemCacheInformation;
-        if (OperatingSystem.Is64Bit)
+        if (OperatingSystemHelper.Is64Bit)
           systemCacheInformation = new WindowsStructs.SystemCacheInformation64
             {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
         else

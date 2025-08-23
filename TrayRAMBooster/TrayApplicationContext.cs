@@ -37,6 +37,7 @@ namespace TrayRAMBooster {
     private bool isBusy;
     private string iconValue;
     private DateTimeOffset lastRun;
+    private DateTimeOffset nextAutoOptimizationByInterval;
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
     private byte optimizationProgressPercentage;
@@ -49,7 +50,6 @@ namespace TrayRAMBooster {
         Text = Updater.ApplicationTitle,
         Visible = true
       };
-      notifyIcon.ContextMenuStrip.Opening += OnContextMenuStripOpening;
       //notifyIcon.MouseUp += (s, e) => {
       //  if (e.Button != MouseButtons.Left) return;
       //  var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -66,13 +66,13 @@ namespace TrayRAMBooster {
             MenuItemOptimizeClick(s, e);
             break;
           case Enums.DoubleClickAction.TaskManager:
-            Process.Start("taskmgr.exe");
+            Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true });
             break;
           case Enums.DoubleClickAction.ResourceMonitor:
             var currentSessionID = Process.GetCurrentProcess().SessionId;
             var process = Process.GetProcessesByName("perfmon").Where(p => p.SessionId == currentSessionID).FirstOrDefault();
             if (process == null) {
-              Process.Start("resmon.exe");
+              Process.Start(new ProcessStartInfo("resmon.exe") { UseShellExecute = true });
             }
             else {
               WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_RESTORE);
@@ -97,7 +97,7 @@ namespace TrayRAMBooster {
       var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
       bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
       graphics = Graphics.FromImage(bitmap);
-      if (Environment.OSVersion.Version.Major > 5) {
+      if (OperatingSystem.IsWindowsXpOrGreater) {
         graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -119,6 +119,7 @@ namespace TrayRAMBooster {
       startupManager = new StartupManager();
       computer = new ComputerService();
       computer.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
+      computer.UpdateMemoryState();
 
       AddMenuItems();
       Theme.SetAutoTheme();
@@ -145,7 +146,7 @@ namespace TrayRAMBooster {
     
     private string GetTrayIconText() {
       return Settings.TrayIconMode switch {
-        Enums.TrayIconMode.MemoryUsed => !Settings.ShowVirtualMemory
+        Enums.TrayIconMode.MemoryUsageValue => !Settings.ShowVirtualMemory
                     ? $"Memory used:\nPhysical: {computer.Memory.Physical.Used}"
                     : $"Memory used:\nPhysical: {computer.Memory.Physical.Used}\nVirtual: {computer.Memory.Virtual.Used}",
         Enums.TrayIconMode.MemoryAvailable => !Settings.ShowVirtualMemory
@@ -157,38 +158,48 @@ namespace TrayRAMBooster {
       };
     }
 
-    private void Update() {
+    private void Update(bool fetchMemoryState) {
 
-      if (!computer.UpdateMemoryState()) return;
+      if (fetchMemoryState && !computer.UpdateMemoryState()) return;
+
+      UpdateIcon();
+
+      if (statusMenuLabel.Visible)
+        ExecuteInUiThread(() => { UpdateStatusMenuItem(false); });
+    }
+
+    private void SafeSetTrayIcon(Icon icon) {
+      var prevIcon = notifyIcon.Icon;
+      notifyIcon.Icon = icon;
+      if (imageIcon != prevIcon)
+        prevIcon?.Destroy();
+    }
+
+    private void UpdateIcon(bool force = false) {
 
       string newIconValue = null;
       switch (Settings.TrayIconMode) {
-        case Enums.TrayIconMode.MemoryUsed:
+        case Enums.TrayIconMode.MemoryUsageValue:
           newIconValue = computer.Memory.Physical.Used.Value.ToTrayValue();
           break;
         case Enums.TrayIconMode.MemoryAvailable:
           newIconValue = computer.Memory.Physical.Free.Value.ToTrayValue();
           break;
         case Enums.TrayIconMode.Image:
-        case Enums.TrayIconMode.MemoryUsage:
+        case Enums.TrayIconMode.MemoryUsagePercent:
         default:
-          if (Settings.TrayIconMode == Enums.TrayIconMode.MemoryUsage)
+          if (Settings.TrayIconMode == Enums.TrayIconMode.MemoryUsagePercent)
             newIconValue = $"{computer.Memory.Physical.Used.Percentage:0}";
           break;
       }
 
-      if (iconValue != newIconValue) {
-        iconValue = newIconValue;
-        UpdateIcon();
-      }
+      if (!force && string.Equals(iconValue, newIconValue, StringComparison.OrdinalIgnoreCase))
+        return;
+      
+      iconValue = newIconValue;
 
-      if (statusMenuLabel.Visible)
-        ExecuteInUiThread(() => { UpdateStatusMenuItem(); });
-    }
-
-    private void UpdateIcon() {
       if (string.IsNullOrEmpty(iconValue) && optimizationProgressPercentage == 0) {
-        notifyIcon.Icon = imageIcon;
+        SafeSetTrayIcon(imageIcon);
       }
       else {
         try {
@@ -249,11 +260,11 @@ namespace TrayRAMBooster {
 
           var handle = bitmap.GetHicon();
           using (var icon = Icon.FromHandle(handle))
-            notifyIcon.Icon = (Icon) icon.Clone();
+            SafeSetTrayIcon((Icon) icon.Clone());
           NativeMethods.DestroyIcon(handle);
         }
         catch {
-          notifyIcon.Icon = imageIcon;
+          SafeSetTrayIcon(imageIcon);
         }
       }
     }
@@ -264,7 +275,7 @@ namespace TrayRAMBooster {
         optimizationProgressPercentage = 0;
       else
         optimizationProgressPercentage = (byte) (value * 100 / stepsCount);
-      UpdateIcon();
+      UpdateIcon(true);
     }
 
     private static Enums.MemoryAreas GetEnabledMemoryAreas() {
@@ -412,10 +423,10 @@ namespace TrayRAMBooster {
             continue;
 
           if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
-            if (Settings.AutoOptimizationInterval > 0 &&
-                DateTimeOffset.Now.Subtract(lastAutoOptimizationByInterval).TotalHours >= Settings.AutoOptimizationInterval) {
+            if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue && DateTimeOffset.Now >= nextAutoOptimizationByInterval) {
               Optimize(Enums.OptimizationReason.Scheduled);
               lastAutoOptimizationByInterval = DateTimeOffset.Now;
+              nextAutoOptimizationByInterval = lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
             }
             else {
               computer.UpdateMemoryState();
@@ -428,7 +439,7 @@ namespace TrayRAMBooster {
             }
           }
           
-          Update();
+          Update(true);
 
           await Task.Delay(Settings.UpdateIntervalSeconds * 1000).ConfigureAwait(false);
         }
@@ -458,9 +469,9 @@ namespace TrayRAMBooster {
           var virtualReleased = (computer.Memory.Virtual.Free.Bytes > tempVirtualAvailable
             ? computer.Memory.Virtual.Free.Bytes - tempVirtualAvailable
             : tempVirtualAvailable - computer.Memory.Virtual.Free.Bytes).ToMemoryUnit();
-          var message = $"Reason: {reason}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
+          var message = $"Reason: {reason}\nPhysical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
           if (Settings.ShowVirtualMemory)
-            message += $"{Environment.NewLine}Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}";
+            message += $"\nVirtual: {virtualReleased.Key:0.#} {virtualReleased.Value}";
           notifyIcon.ShowBalloonTip(5000, "Memory optimized", message, ToolTipIcon.Info);
         }
       }
@@ -476,7 +487,7 @@ namespace TrayRAMBooster {
       if (IsBusy) return;
       Task.Run(() => {
         Optimize(Enums.OptimizationReason.Manual);
-        Update();
+        Update(true);
       });
     } 
     
@@ -591,9 +602,9 @@ namespace TrayRAMBooster {
       iconTypeMenu = new ToolStripMenuItem("Icon type") {
         DropDownItems = {
           new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
-          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsage); }),
+          new ToolStripMenuItem("Memory usage (%)", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsagePercent); }),
           new ToolStripMenuItem("Memory available", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryAvailable); }),
-          new ToolStripMenuItem("Memory used", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsed); }),
+          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsageValue); }),
         }
       };
       iconTypeMenu.DropDown.Closing += OnContextMenuStripClosing;
@@ -615,9 +626,9 @@ namespace TrayRAMBooster {
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Icon color", null, (_, _) => {
         using (var dialog = new ColorDialog()) {
           dialog.Color = Settings.TrayIconValueColor;
-          if (dialog.ShowDialog() != DialogResult.OK) return;
+          if (dialog.ShowDialog() != DialogResult.OK || Settings.TrayIconValueColor == dialog.Color) return;
           Settings.TrayIconValueColor = dialog.Color;
-          UpdateIcon();
+          UpdateIcon(true);
         }
       }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
@@ -631,7 +642,7 @@ namespace TrayRAMBooster {
 
     private void SetIconType(Enums.TrayIconMode trayIconMode) {
       Settings.TrayIconMode = trayIconMode;
-      Update();
+      Update(true);
       foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
         ((ToolStripMenuItem)iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconMode == trayType;
       }
@@ -646,11 +657,13 @@ namespace TrayRAMBooster {
 
     private void SetOptimizationIntervalType(int interval) {
       Settings.AutoOptimizationInterval = interval;
+      nextAutoOptimizationByInterval = interval == 0 ? DateTimeOffset.MinValue 
+        : lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
       foreach (var subItem in autoOptimizationIntervalMenu.DropDownItems) {
         if (subItem is ToolStripMenuItem subMenuItem)
           subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == interval;
       }
-      UpdateStatusMenuItem();
+      UpdateStatusMenuItem(true);
     }
 
     private void SetOptimizationUsage(int percent) {
@@ -673,18 +686,15 @@ namespace TrayRAMBooster {
       }
     }
     
-    private void OnContextMenuStripOpening(object sender, CancelEventArgs e) {
-      UpdateStatusMenuItem();
-    }
+    private void UpdateStatusMenuItem(bool force) {
 
-    private void UpdateStatusMenuItem() {
+      if (!force && !statusMenuLabel.Visible) return;
       string iconText = GetTrayIconText();
       if (lastRun != DateTimeOffset.MinValue) {
-        iconText += $"{Environment.NewLine}Last run: {lastRun:G}";
+        iconText += $"\nLast run: {lastRun:G}";
       }
-      if (Settings.AutoOptimizationInterval > 0) {
-        var nextRun = lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
-        iconText += $"{Environment.NewLine}Next run: {nextRun:G}";
+      if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue) {
+        iconText += $"\nNext run: {nextAutoOptimizationByInterval:G}";
       }
       if (iconText != statusMenuLabel.Text)
         statusMenuLabel.Text = iconText;

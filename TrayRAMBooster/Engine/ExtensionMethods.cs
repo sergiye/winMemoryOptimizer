@@ -44,5 +44,10 @@ namespace TrayRAMBooster {
       double rounded1 = Math.Round(value, 1);
       return rounded1 < 10 ? rounded1.ToString("0.0") : Math.Round(value).ToString("0");
     }
+
+    public static void Destroy(this Icon icon) {
+      NativeMethods.DestroyIcon(icon.Handle);
+      icon.Dispose();
+    }
   }
 }
