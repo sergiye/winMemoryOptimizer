@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -24,7 +25,8 @@ namespace TrayRAMBooster {
     private readonly StartupManager startupManager;
     private ToolStripLabel statusMenuLabel;
     private ToolStripMenuItem iconTypeMenu;
-    private ToolStripMenuItem autoOptimizeEveryMenu;
+    private ToolStripMenuItem iconDoubleClickMenu;
+    private ToolStripMenuItem autoOptimizationIntervalMenu;
     private ToolStripMenuItem autoOptimizeUsageMenu;
     private ToolStripMenuItem updateIntervalMenu;
     private ToolStripMenuItem optimizationTypesMenu;
@@ -58,7 +60,31 @@ namespace TrayRAMBooster {
         if (notifyIcon.Text != iconText)
           notifyIcon.Text = iconText.Length > 63 ? iconText.Substring(0, 63) : iconText;
       };
-      notifyIcon.DoubleClick += MenuItemOptimizeClick;
+      notifyIcon.DoubleClick += (s, e) => {
+        switch (Settings.DoubleClickAction) {
+          case Enums.DoubleClickAction.Optimize:
+            MenuItemOptimizeClick(s, e);
+            break;
+          case Enums.DoubleClickAction.TaskManager:
+            Process.Start("taskmgr.exe");
+            break;
+          case Enums.DoubleClickAction.ResourceMonitor:
+            var currentSessionID = Process.GetCurrentProcess().SessionId;
+            var process = Process.GetProcessesByName("perfmon").Where(p => p.SessionId == currentSessionID).FirstOrDefault();
+            if (process == null) {
+              Process.Start("resmon.exe");
+            }
+            else {
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_RESTORE);
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_SHOWNORMAL);
+              WinApiHelper.SetForegroundWindow(process.MainWindowHandle);
+            }
+            break;
+          case Enums.DoubleClickAction.None:
+          default:
+            break;
+        }
+      };
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
       uiContext = SynchronizationContext.Current;
       
@@ -298,9 +324,17 @@ namespace TrayRAMBooster {
       }
       finally {
         IsBusy = false;
-      }  
+        UpdateAreasMenuItems();
+      }
     }
-    
+
+    private void UpdateAreasMenuItems() {
+      foreach (var subItem in optimizationTypesMenu.DropDownItems) {
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is Enums.MemoryAreas area && Settings.MemoryAreas.HasFlag(area);
+      }
+    }
+
     private static void SetPriority(Enums.Priority priority) {
       bool priorityBoostEnabled;
       ProcessPriorityClass processPriorityClass;
@@ -467,34 +501,38 @@ namespace TrayRAMBooster {
         Checked = startupManager.Startup,
       });
       //auto-optimize
-      autoOptimizeEveryMenu = new ToolStripMenuItem("Optimize every") {
+      autoOptimizationIntervalMenu = new ToolStripMenuItem("Optimize every") {
         DropDownItems = {
-          new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationInterval = 0; }){Tag = 0},
-          new ToolStripMenuItem("1 hour", null, (_, _) => { Settings.AutoOptimizationInterval = 1; }){Tag = 1},
-          new ToolStripMenuItem("2 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 2; }){Tag = 2},
-          new ToolStripMenuItem("3 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 3; }){Tag = 3},
-          new ToolStripMenuItem("4 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 4; }){Tag = 4},
-          new ToolStripMenuItem("5 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 5; }){Tag = 5},
-          new ToolStripMenuItem("6 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 6; }){Tag = 6},
-          new ToolStripMenuItem("9 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 9; }){Tag = 9},
-          new ToolStripMenuItem("12 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 12; }){Tag = 12},
-          new ToolStripMenuItem("24 hours", null, (_, _) => { Settings.AutoOptimizationInterval = 24; }){Tag = 24},
-      }
+          new ToolStripMenuItem("Never", null, (_, _) => { SetOptimizationIntervalType(0); }){Tag = 0},
+          new ToolStripMenuItem("1 hour", null, (_, _) => { SetOptimizationIntervalType(1); }){Tag = 1},
+          new ToolStripMenuItem("2 hours", null, (_, _) => { SetOptimizationIntervalType(2); }){Tag = 2},
+          new ToolStripMenuItem("3 hours", null, (_, _) => { SetOptimizationIntervalType(3); }){Tag = 3},
+          new ToolStripMenuItem("4 hours", null, (_, _) => { SetOptimizationIntervalType(4); }){Tag = 4},
+          new ToolStripMenuItem("5 hours", null, (_, _) => { SetOptimizationIntervalType(5); }){Tag = 5},
+          new ToolStripMenuItem("6 hours", null, (_, _) => { SetOptimizationIntervalType(6); }){Tag = 6},
+          new ToolStripMenuItem("9 hours", null, (_, _) => { SetOptimizationIntervalType(9); }){Tag = 9},
+          new ToolStripMenuItem("12 hours", null, (_, _) => { SetOptimizationIntervalType(12); }){Tag = 12},
+          new ToolStripMenuItem("24 hours", null, (_, _) => { SetOptimizationIntervalType(24); }){Tag = 24},
+        }
       };
-      notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeEveryMenu);
+      autoOptimizationIntervalMenu.DropDown.Closing += OnContextMenuStripClosing;
+      notifyIcon.ContextMenuStrip.Items.Add(autoOptimizationIntervalMenu);
+      SetOptimizationIntervalType(Settings.AutoOptimizationInterval);
 
       autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory is below") {
         DropDownItems = {
-          new ToolStripMenuItem("Never", null, (_, _) => { Settings.AutoOptimizationMemoryUsage = 0; }),
+          new ToolStripMenuItem("Never", null, (_, _) => { SetOptimizationUsage(0); }),
         }
       };
       for (var i = 10; i < 100; i+=10) {
         var percent = i;
-        autoOptimizeUsageMenu.DropDownItems.Add(new ToolStripMenuItem($"{i}%", null,
-          (_, _) => { Settings.AutoOptimizationMemoryUsage = percent; }));
+        autoOptimizeUsageMenu.DropDownItems.Add(new ToolStripMenuItem($"{i}%", null, (_, _) => { SetOptimizationUsage(percent); }));
       }
+      autoOptimizeUsageMenu.DropDown.Closing += OnContextMenuStripClosing;
       notifyIcon.ContextMenuStrip.Items.Add(autoOptimizeUsageMenu);
+      SetOptimizationUsage(Settings.AutoOptimizationMemoryUsage);
 
+      #region Optimization types
       optimizationTypesMenu = new ToolStripMenuItem("Optimization types");
       if (OperatingSystem.HasProcessesWorkingSet) 
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Processes working set", null, (_, _) => {
@@ -520,8 +558,11 @@ namespace TrayRAMBooster {
           ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
         }) { Tag = Enums.MemoryAreas.StandbyListLowPriority });
       }
+      optimizationTypesMenu.DropDown.Closing += OnContextMenuStripClosing;
+      UpdateAreasMenuItems();
       notifyIcon.ContextMenuStrip.Items.Add(optimizationTypesMenu);
-      
+      #endregion
+
       //settings
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
         Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
@@ -538,16 +579,19 @@ namespace TrayRAMBooster {
 
       updateIntervalMenu = new ToolStripMenuItem("Update interval") {
         DropDownItems = {
-          new ToolStripMenuItem("1 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 1; }){Tag = 1},
-          new ToolStripMenuItem("2 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 2; }){Tag = 2},
-          new ToolStripMenuItem("3 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 3; }){Tag = 3},
-          new ToolStripMenuItem("5 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 5; }){Tag = 5},
-          new ToolStripMenuItem("10 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 10; }){Tag = 10},
-          new ToolStripMenuItem("30 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 30; }){Tag = 30},
-          new ToolStripMenuItem("60 sec", null, (_, _) => { Settings.UpdateIntervalSeconds = 60; }){Tag = 60},
+          new ToolStripMenuItem("1 sec", null, (_, _) => { SetUpdateInterval(1); }){Tag = 1},
+          new ToolStripMenuItem("2 sec", null, (_, _) => { SetUpdateInterval(2); }){Tag = 2},
+          new ToolStripMenuItem("3 sec", null, (_, _) => { SetUpdateInterval(3); }){Tag = 3},
+          new ToolStripMenuItem("5 sec", null, (_, _) => { SetUpdateInterval(5); }){Tag = 5},
+          new ToolStripMenuItem("10 sec", null, (_, _) => { SetUpdateInterval(10); }){Tag = 10},
+          new ToolStripMenuItem("30 sec", null, (_, _) => { SetUpdateInterval(30); }){Tag = 30},
+          new ToolStripMenuItem("60 sec", null, (_, _) => { SetUpdateInterval(60); }){Tag = 60},
         }
       };
+      updateIntervalMenu.DropDown.Closing += OnContextMenuStripClosing;
       notifyIcon.ContextMenuStrip.Items.Add(updateIntervalMenu);
+      SetUpdateInterval(Settings.UpdateIntervalSeconds);
+
       iconTypeMenu = new ToolStripMenuItem("Icon type") {
         DropDownItems = {
           new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
@@ -556,8 +600,23 @@ namespace TrayRAMBooster {
           new ToolStripMenuItem("Memory used", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsed); }),
         }
       };
+      iconTypeMenu.DropDown.Closing += OnContextMenuStripClosing;
       notifyIcon.ContextMenuStrip.Items.Add(iconTypeMenu);
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Set icon color", null, (_, _) => {
+      SetIconType(Settings.TrayIconMode);
+
+      iconDoubleClickMenu = new ToolStripMenuItem("Icon double click action") {
+        DropDownItems = {
+          new ToolStripMenuItem("None", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.None); }),
+          new ToolStripMenuItem("Optimize", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.Optimize); }),
+          new ToolStripMenuItem("Task Manager", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.TaskManager); }),
+          new ToolStripMenuItem("Resource Monitor", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.ResourceMonitor); }),
+        }
+      };
+      iconDoubleClickMenu.DropDown.Closing += OnContextMenuStripClosing;
+      notifyIcon.ContextMenuStrip.Items.Add(iconDoubleClickMenu);
+      SetIconDoubleClickAction(Settings.DoubleClickAction);
+
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Icon color", null, (_, _) => {
         using (var dialog = new ColorDialog()) {
           dialog.Color = Settings.TrayIconValueColor;
           if (dialog.ShowDialog() != DialogResult.OK) return;
@@ -574,30 +633,51 @@ namespace TrayRAMBooster {
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => { ExitThread(); }));
     }
 
-    private void SetIconType(Enums.TrayIconMode trayIconЬщву) {
-      Settings.TrayIconMode = trayIconЬщву;
+    private void SetIconType(Enums.TrayIconMode trayIconMode) {
+      Settings.TrayIconMode = trayIconMode;
       Update();
+      foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
+        ((ToolStripMenuItem)iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconMode == trayType;
+      }
+    }
+
+    private void SetIconDoubleClickAction(Enums.DoubleClickAction clickAction) {
+      Settings.DoubleClickAction = clickAction;
+      foreach (Enums.DoubleClickAction action in Enum.GetValues(typeof(Enums.DoubleClickAction))) {
+        ((ToolStripMenuItem)iconDoubleClickMenu.DropDownItems[(int)action]).Checked = Settings.DoubleClickAction == action;
+      }
+    }
+
+    private void SetOptimizationIntervalType(int interval) {
+      Settings.AutoOptimizationInterval = interval;
+      foreach (var subItem in autoOptimizationIntervalMenu.DropDownItems) {
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == interval;
+      }
+      UpdateStatusMenuItem();
+    }
+
+    private void SetOptimizationUsage(int percent) {
+      Settings.AutoOptimizationMemoryUsage = percent;
+      for (var i = 0; i < 10; i++)
+        ((ToolStripMenuItem)autoOptimizeUsageMenu.DropDownItems[i]).Checked = percent == i * 10;
+    }
+
+    private void SetUpdateInterval(int interval) {
+      Settings.UpdateIntervalSeconds = interval;
+      foreach (var subItem in updateIntervalMenu.DropDownItems) {
+        if (subItem is ToolStripMenuItem subMenuItem)
+          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == interval;
+      }
+    }
+
+    private void OnContextMenuStripClosing(object sender, ToolStripDropDownClosingEventArgs e) {
+      if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked) {
+        e.Cancel = true;
+      }
     }
     
     private void OnContextMenuStripOpening(object sender, CancelEventArgs e) {
-
-      foreach (Enums.TrayIconMode trayType in Enum.GetValues(typeof(Enums.TrayIconMode))) {
-        ((ToolStripMenuItem) iconTypeMenu.DropDownItems[(int)trayType]).Checked = Settings.TrayIconMode == trayType;
-      }
-      foreach (var subItem in autoOptimizeEveryMenu.DropDownItems) {
-        if (subItem is ToolStripMenuItem subMenuItem)
-          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.AutoOptimizationInterval;
-      }
-      for (var i = 0; i < 10; i ++)
-        ((ToolStripMenuItem) autoOptimizeUsageMenu.DropDownItems[i]).Checked = Settings.AutoOptimizationMemoryUsage == i * 10;
-      foreach (var subItem in optimizationTypesMenu.DropDownItems) {
-        if (subItem is ToolStripMenuItem subMenuItem)
-          subMenuItem.Checked = subMenuItem.Tag is Enums.MemoryAreas area && Settings.MemoryAreas.HasFlag(area);
-      }
-      foreach (var subItem in updateIntervalMenu.DropDownItems) {
-        if (subItem is ToolStripMenuItem subMenuItem)
-          subMenuItem.Checked = subMenuItem.Tag is int intTag && intTag == Settings.UpdateIntervalSeconds;
-      }
       UpdateStatusMenuItem();
     }
 

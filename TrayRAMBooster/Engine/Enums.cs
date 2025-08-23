@@ -42,6 +42,13 @@ namespace TrayRAMBooster {
       MemoryUsed,
     }
 
+    public enum DoubleClickAction {
+      None,
+      Optimize,
+      TaskManager,
+      ResourceMonitor,
+    }
+
     public enum Priority {
       Low,
       Normal,

@@ -9,6 +9,7 @@ namespace TrayRAMBooster {
   internal static class Settings {
     private static Color trayIconValueColor;
     private static Enums.TrayIconMode trayIconMode;
+    private static Enums.DoubleClickAction doubleClickAction;
     private static bool showVirtualMemory;
     private static bool showOptimizationNotifications;
     private static Enums.Priority runOnPriority;
@@ -20,15 +21,17 @@ namespace TrayRAMBooster {
     static Settings() {
       autoOptimizationInterval = 0;
       autoOptimizationMemoryUsage = 0;
-      updateIntervalSeconds = 1;
-      memoryAreas = Enums.MemoryAreas.CombinedPageList | Enums.MemoryAreas.ModifiedPageList |
-                    Enums.MemoryAreas.ProcessesWorkingSet | Enums.MemoryAreas.StandbyList |
-                    Enums.MemoryAreas.SystemWorkingSet;
+      updateIntervalSeconds = 30;
+      memoryAreas = Enums.MemoryAreas.ModifiedPageList 
+                  | Enums.MemoryAreas.ProcessesWorkingSet 
+                  | Enums.MemoryAreas.StandbyListLowPriority 
+                  | Enums.MemoryAreas.SystemWorkingSet;
       ProcessExclusionList = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
       runOnPriority = Enums.Priority.Low;
       showOptimizationNotifications = true;
       showVirtualMemory = true;
       trayIconMode = Enums.TrayIconMode.MemoryAvailable;
+      doubleClickAction = Enums.DoubleClickAction.Optimize;
       var taskbarColor = NativeMethods.GetTaskbarColor(); 
       trayIconValueColor = taskbarColor.IsDark() 
         ? Color.FromArgb(int.Parse("ff00ff80", System.Globalization.NumberStyles.HexNumber)) 
@@ -67,6 +70,10 @@ namespace TrayRAMBooster {
           if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.TrayIcon, trayIconMode)),
                 out Enums.TrayIconMode trayIcon) && trayIcon.IsValid())
             trayIconMode = trayIcon;
+
+          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.DoubleClickAction, doubleClickAction)),
+                out Enums.DoubleClickAction clickAction) && doubleClickAction.IsValid())
+            doubleClickAction = clickAction;
 
           trayIconValueColor = Color.FromArgb(Convert.ToInt32(key.GetValue(Constants.RegistryName.TrayIconValueColor, trayIconValueColor)));
         }
@@ -153,6 +160,15 @@ namespace TrayRAMBooster {
       }
     }
 
+    public static Enums.DoubleClickAction DoubleClickAction {
+      get => doubleClickAction;
+      set {
+        if (doubleClickAction == value) return;
+        doubleClickAction = value;
+        Save();
+      }
+    }
+
     public static Color TrayIconValueColor {
       get => trayIconValueColor;
       set {
@@ -186,6 +202,7 @@ namespace TrayRAMBooster {
           key.SetValue(Constants.RegistryName.ShowOptimizationNotifications, ShowOptimizationNotifications ? 1 : 0);
           key.SetValue(Constants.RegistryName.ShowVirtualMemory, ShowVirtualMemory ? 1 : 0);
           key.SetValue(Constants.RegistryName.TrayIcon, (int) TrayIconMode);
+          key.SetValue(Constants.RegistryName.DoubleClickAction, (int) DoubleClickAction);
           key.SetValue(Constants.RegistryName.TrayIconValueColor, TrayIconValueColor.ToArgb());
         }
       }
