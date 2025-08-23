@@ -414,7 +414,7 @@ namespace TrayRAMBooster {
           if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
             if (Settings.AutoOptimizationInterval > 0 &&
                 DateTimeOffset.Now.Subtract(lastAutoOptimizationByInterval).TotalHours >= Settings.AutoOptimizationInterval) {
-              Optimize();
+              Optimize(Enums.OptimizationReason.Scheduled);
               lastAutoOptimizationByInterval = DateTimeOffset.Now;
             }
             else {
@@ -422,7 +422,7 @@ namespace TrayRAMBooster {
               if (Settings.AutoOptimizationMemoryUsage > 0 &&
                   computer.Memory.Physical.Free.Percentage < Settings.AutoOptimizationMemoryUsage &&
                   DateTimeOffset.Now.Subtract(lastAutoOptimizationByMemoryUsage).TotalMinutes >= AutoOptimizationMemoryUsageInterval) {
-                Optimize();
+                Optimize(Enums.OptimizationReason.Usage);
                 lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
               }
             }
@@ -438,7 +438,7 @@ namespace TrayRAMBooster {
       }
     }
 
-    private void Optimize() {
+    private void Optimize(Enums.OptimizationReason reason) {
       try {
         if (IsBusy)
           return;
@@ -448,7 +448,7 @@ namespace TrayRAMBooster {
         var tempPhysicalAvailable = computer.Memory.Physical.Free.Bytes;
         var tempVirtualAvailable = computer.Memory.Virtual.Free.Bytes;
 
-        computer.Optimize(Settings.MemoryAreas);
+        computer.Optimize(Settings.MemoryAreas, reason);
         lastRun = DateTimeOffset.Now;
 
         if (Settings.ShowOptimizationNotifications && computer.UpdateMemoryState()) {
@@ -458,10 +458,10 @@ namespace TrayRAMBooster {
           var virtualReleased = (computer.Memory.Virtual.Free.Bytes > tempVirtualAvailable
             ? computer.Memory.Virtual.Free.Bytes - tempVirtualAvailable
             : tempVirtualAvailable - computer.Memory.Virtual.Free.Bytes).ToMemoryUnit();
-          var message = Settings.ShowVirtualMemory
-            ? $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}{Environment.NewLine}Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}"
-            : $"Memory optimized{Environment.NewLine}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
-          notifyIcon.ShowBalloonTip(5000, Updater.ApplicationTitle, message, ToolTipIcon.Info);
+          var message = $"Reason: {reason}{Environment.NewLine}Physical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
+          if (Settings.ShowVirtualMemory)
+            message += $"{Environment.NewLine}Virtual: {virtualReleased.Key:0.#} {virtualReleased.Value}";
+          notifyIcon.ShowBalloonTip(5000, "Memory optimized", message, ToolTipIcon.Info);
         }
       }
       catch (Exception ex) {
@@ -475,7 +475,7 @@ namespace TrayRAMBooster {
     private void MenuItemOptimizeClick(object sender, EventArgs e) {
       if (IsBusy) return;
       Task.Run(() => {
-        Optimize();
+        Optimize(Enums.OptimizationReason.Manual);
         Update();
       });
     } 

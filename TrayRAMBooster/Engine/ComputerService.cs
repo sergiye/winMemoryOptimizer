@@ -57,13 +57,14 @@ namespace TrayRAMBooster {
       return result;
     }
 
-    public void Optimize(Enums.MemoryAreas areas) {
+    public void Optimize(Enums.MemoryAreas areas, Enums.OptimizationReason reason) {
       if (areas == Enums.MemoryAreas.None)
         return;
 
       var errorLog = new StringBuilder();
       const string errorLogFormat = "{0} ({1}: {2})";
       var infoLog = new StringBuilder();
+      infoLog.AppendLine($"Optimization start reason: {reason}");
       const string infoLogFormat = "{0} ({1}) ({2:0.0} {3})";
       var runtime = TimeSpan.Zero;
       var stopwatch = new Stopwatch();

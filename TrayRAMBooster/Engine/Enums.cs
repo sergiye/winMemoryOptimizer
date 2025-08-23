@@ -49,6 +49,12 @@ namespace TrayRAMBooster {
       ResourceMonitor,
     }
 
+    public enum OptimizationReason {
+      Manual,
+      Scheduled,
+      Usage
+    }
+
     public enum Priority {
       Low,
       Normal,
