@@ -34,8 +34,8 @@ namespace TrayRAMBooster {
       doubleClickAction = Enums.DoubleClickAction.Optimize;
       var taskbarColor = NativeMethods.GetTaskbarColor(); 
       trayIconValueColor = taskbarColor.IsDark() 
-        ? Color.FromArgb(int.Parse("ff00ff80", System.Globalization.NumberStyles.HexNumber)) 
-        : Color.DarkBlue;
+        ? Color.Lime //Cyan / SpringGreen
+        : Color.DarkGreen; //Teal / Green
 
       try {
         using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.ProcessExclusionList)) {
