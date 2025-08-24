@@ -10,7 +10,13 @@ using System.Text;
 namespace TrayRAMBooster {
   
   internal class ComputerService {
-    
+
+    public static bool HasCombinedPageList => OperatingSystemHelper.IsWindows8OrGreater;
+    public static bool HasModifiedPageList => OperatingSystemHelper.IsWindowsVistaOrGreater;
+    public static bool HasProcessesWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
+    public static bool HasStandbyList => OperatingSystemHelper.IsWindowsVistaOrGreater;
+    public static bool HasSystemWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
+
     private WindowsStructs.MemoryStatusEx memoryStatusEx;
 
     public ComputerService() {
@@ -214,7 +220,7 @@ namespace TrayRAMBooster {
     }
 
     private static void OptimizeCombinedPageList() {
-      if (!OperatingSystem.HasCombinedPageList)
+      if (!HasCombinedPageList)
         throw new Exception("The Combined Page List optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeProfSingleProcessName))
@@ -243,7 +249,7 @@ namespace TrayRAMBooster {
     }
 
     private static void OptimizeModifiedPageList() {
-      if (!OperatingSystem.HasModifiedPageList)
+      if (!HasModifiedPageList)
         throw new Exception("The Modified Page List optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeProfSingleProcessName))
@@ -271,7 +277,7 @@ namespace TrayRAMBooster {
     }
 
     private static void OptimizeProcessesWorkingSet() {
-      if (!OperatingSystem.HasProcessesWorkingSet)
+      if (!HasProcessesWorkingSet)
         throw new Exception("The Processes Working Set optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeDebugName))
@@ -302,7 +308,7 @@ namespace TrayRAMBooster {
     }
 
     private static void OptimizeStandbyList(bool lowPriority = false) {
-      if (!OperatingSystem.HasStandbyList)
+      if (!HasStandbyList)
         throw new Exception("The Standby List optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeProfSingleProcessName))
@@ -332,7 +338,7 @@ namespace TrayRAMBooster {
     }
 
     private static void OptimizeSystemWorkingSet() {
-      if (!OperatingSystem.HasSystemWorkingSet)
+      if (!HasSystemWorkingSet)
         throw new Exception("The System Working Set optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeIncreaseQuotaName))

@@ -2,9 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +17,7 @@ namespace TrayRAMBooster {
 
     private readonly Icon imageIcon;
     private readonly NotifyIcon notifyIcon;
+    private readonly IconFactory iconFactory;
     private readonly SynchronizationContext uiContext;
     private readonly ComputerService computer;
     private readonly StartupManager startupManager;
@@ -30,10 +28,6 @@ namespace TrayRAMBooster {
     private ToolStripMenuItem autoOptimizeUsageMenu;
     private ToolStripMenuItem updateIntervalMenu;
     private ToolStripMenuItem optimizationTypesMenu;
-    private readonly Bitmap bitmap;
-    private readonly Graphics graphics;
-    private readonly Font font;
-    private readonly Font smallFont;
     private bool isBusy;
     private string iconValue;
     private DateTimeOffset lastRun;
@@ -87,24 +81,7 @@ namespace TrayRAMBooster {
       };
       notifyIcon.ContextMenuStrip.Renderer = new ThemedToolStripRenderer();
       uiContext = SynchronizationContext.Current;
-      
-      float dpiX, dpiY;
-      using (var b = new Bitmap(1, 1, PixelFormat.Format32bppArgb)) {
-        dpiX = b.HorizontalResolution;
-        dpiY = b.VerticalResolution;
-      }
-      var width = Math.Max(16, (int)Math.Round(16 * dpiX / 96));
-      var height = Math.Max(16, (int)Math.Round(16 * dpiY / 96));
-      bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-      graphics = Graphics.FromImage(bitmap);
-      if (OperatingSystem.IsWindowsXpOrGreater) {
-        graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-      }
-      font = new Font("Arial", width == 16 ? 10.0F : 8.0F * dpiX / 96);
-      smallFont = new Font("Arial", width == 16 ? 8.0F : 6.0F * dpiX / 96);
+      iconFactory = new IconFactory(Settings.TrayIconValueColor);
 
       Updater.Subscribe(
         (message, isError) => {
@@ -202,65 +179,9 @@ namespace TrayRAMBooster {
       }
       else {
         try {
-          var color = Settings.TrayIconValueColor;
-          var iconBackColor = Color.Transparent;
-          graphics.Clear(iconBackColor);
-
-          if (optimizationProgressPercentage > 0) {
-            var rect = new Rectangle(1, 1, bitmap.Width - 2, bitmap.Height - 2);
-            // var backColor = NativeMethods.GetTaskbarColor(); 
-            // using (var b = new SolidBrush(backColor))
-            //   graphics.FillEllipse(b, rect);
-            var sweepAngle = 360f * optimizationProgressPercentage / 100f;
-            if (sweepAngle > 0) {
-              using (var b = new SolidBrush(color))
-                graphics.FillPie(b, rect, -90, sweepAngle);
-            }
-            using (var p = new Pen(color, 1))
-              graphics.DrawEllipse(p, rect);
-      
-            // var text = value.ToString(); //optimizationProgressPercentage.ToString();
-            // using (var path = new GraphicsPath()) {
-            //   var emSize = graphics.DpiY * smallFont.Size / 72;
-            //   var format = new StringFormat {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};
-            //   path.AddString(text, smallFont.FontFamily, (int) smallFont.Style, emSize, new RectangleF(0, 0, bitmap.Width, bitmap.Height), format);
-            //   using (var outline = new Pen(fillColor, 2)) {
-            //     outline.LineJoin = LineJoin.Round;
-            //     graphics.DrawPath(outline, path);
-            //   }
-            //   using (var brush = new SolidBrush(backColor)) graphics.FillPath(brush, path);
-            // }
-          }
-          else {
-            var small = iconValue.Length > 2;
-            if (small) {
-              if (iconValue[1] == '.' || iconValue[1] == ',') {
-                var bigPart = iconValue.Substring(0, 1);
-                var smallPart = iconValue.Substring(1);
-                TextRenderer.DrawText(graphics, bigPart, font, new Point(-bitmap.Width / 4, bitmap.Height / 2), color,
-                  iconBackColor, TextFormatFlags.VerticalCenter);
-                TextRenderer.DrawText(graphics, smallPart, smallFont, new Point(bitmap.Width / 4, bitmap.Height), color,
-                  iconBackColor, TextFormatFlags.Bottom);
-              }
-              else {
-                var size = TextRenderer.MeasureText(iconValue, smallFont);
-                TextRenderer.DrawText(graphics, iconValue, smallFont,
-                  new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
-                  TextFormatFlags.VerticalCenter);
-              }
-            }
-            else {
-              var size = TextRenderer.MeasureText(iconValue, font);
-              TextRenderer.DrawText(graphics, iconValue, font,
-                new Point((bitmap.Width - size.Width) / 2, bitmap.Height / 2), color, iconBackColor,
-                TextFormatFlags.VerticalCenter);
-            }
-          }
-
-          var handle = bitmap.GetHicon();
-          using (var icon = Icon.FromHandle(handle))
-            SafeSetTrayIcon((Icon) icon.Clone());
-          NativeMethods.DestroyIcon(handle);
+          SafeSetTrayIcon(optimizationProgressPercentage > 0
+            ? iconFactory.CreatePercentagePieIcon(optimizationProgressPercentage)
+            : iconFactory.CreateTransparentIcon(iconValue));
         }
         catch {
           SafeSetTrayIcon(imageIcon);
@@ -278,17 +199,17 @@ namespace TrayRAMBooster {
     }
 
     private static Enums.MemoryAreas GetEnabledMemoryAreas() {
-      if (!OperatingSystem.HasCombinedPageList)
+      if (!ComputerService.HasCombinedPageList)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.CombinedPageList;
-      if (!OperatingSystem.HasModifiedPageList)
+      if (!ComputerService.HasModifiedPageList)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedPageList;
-      if (!OperatingSystem.HasProcessesWorkingSet)
+      if (!ComputerService.HasProcessesWorkingSet)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.ProcessesWorkingSet;
-      if (!OperatingSystem.HasStandbyList) {
+      if (!ComputerService.HasStandbyList) {
         Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
         Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
       }
-      if (!OperatingSystem.HasSystemWorkingSet)
+      if (!ComputerService.HasSystemWorkingSet)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemWorkingSet;
       return Settings.MemoryAreas;
     }
@@ -540,23 +461,23 @@ namespace TrayRAMBooster {
 
       #region Optimization types
       optimizationTypesMenu = new ToolStripMenuItem("Optimization types");
-      if (OperatingSystem.HasProcessesWorkingSet) 
+      if (ComputerService.HasProcessesWorkingSet) 
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Processes working set", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ProcessesWorkingSet);
         }) { Tag = Enums.MemoryAreas.ProcessesWorkingSet });
-      if (OperatingSystem.HasSystemWorkingSet)
+      if (ComputerService.HasSystemWorkingSet)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System working set", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.SystemWorkingSet);
         }) { Tag = Enums.MemoryAreas.SystemWorkingSet });
-      if (OperatingSystem.HasCombinedPageList)
+      if (ComputerService.HasCombinedPageList)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Combined page list", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.CombinedPageList);
         }) { Tag = Enums.MemoryAreas.CombinedPageList });
-      if (OperatingSystem.HasModifiedPageList) 
+      if (ComputerService.HasModifiedPageList) 
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified page list", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ModifiedPageList);
         }) { Tag = Enums.MemoryAreas.ModifiedPageList });
-      if (OperatingSystem.HasStandbyList) {
+      if (ComputerService.HasStandbyList) {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.StandbyList);
         }) { Tag = Enums.MemoryAreas.StandbyList });
@@ -704,10 +625,7 @@ namespace TrayRAMBooster {
       components.Dispose();
       imageIcon?.Dispose();
       notifyIcon?.Dispose();
-      graphics?.Dispose();
-      bitmap?.Dispose();
-      font?.Dispose();
-      smallFont?.Dispose();
+      iconFactory?.Dispose();
       GC.SuppressFinalize(this);
     }
 

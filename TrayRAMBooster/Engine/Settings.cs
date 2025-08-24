@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Win32;
+using sergiye.Common;
 
 namespace TrayRAMBooster {
 
@@ -32,8 +33,7 @@ namespace TrayRAMBooster {
       showVirtualMemory = true;
       trayIconMode = Enums.TrayIconMode.MemoryAvailable;
       doubleClickAction = Enums.DoubleClickAction.Optimize;
-      var taskbarColor = NativeMethods.GetTaskbarColor(); 
-      trayIconValueColor = taskbarColor.IsDark() 
+      trayIconValueColor = WinApiHelper.IsTaskbarDark() 
         ? Color.Lime //Cyan / SpringGreen
         : Color.DarkGreen; //Teal / Green
 
