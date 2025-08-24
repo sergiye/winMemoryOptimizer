@@ -15,7 +15,7 @@ namespace TrayRAMBooster {
 
     public ComputerService() {
       memoryStatusEx = new WindowsStructs.MemoryStatusEx();
-      Memory.Update(memoryStatusEx);
+      UpdateMemoryState();
     }
 
     public Memory Memory { get; } = new Memory();

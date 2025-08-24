@@ -119,7 +119,6 @@ namespace TrayRAMBooster {
       startupManager = new StartupManager();
       computer = new ComputerService();
       computer.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
-      computer.UpdateMemoryState();
 
       AddMenuItems();
       Theme.SetAutoTheme();
@@ -419,9 +418,10 @@ namespace TrayRAMBooster {
       SetPriority(Settings.RunOnPriority);
       while (true) {
         try {
-          if (IsBusy)
+          if (IsBusy) {
+            await Task.Delay(1000).ConfigureAwait(false);
             continue;
-
+          }
           if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
             if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue && DateTimeOffset.Now >= nextAutoOptimizationByInterval) {
               Optimize(Enums.OptimizationReason.Scheduled);
@@ -494,7 +494,6 @@ namespace TrayRAMBooster {
     private void AddMenuItems() {
 
       var menuImage = imageIcon.ToBitmap();
-      //notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem(Updater.ApplicationTitle, menuImage, (_, _) => { Updater.VisitAppSite(); }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Optimize now", menuImage, MenuItemOptimizeClick));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
       statusMenuLabel = new ToolStripLabel() { TextAlign = ContentAlignment.MiddleLeft };
@@ -573,15 +572,15 @@ namespace TrayRAMBooster {
       //settings
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
         Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
-        ((ToolStripMenuItem)sender).Checked = Settings.ShowOptimizationNotifications;
       }) {
         Checked = Settings.ShowOptimizationNotifications,
+        CheckOnClick = true,
       });
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show virtual memory", null, (sender, _) => {
         Settings.ShowVirtualMemory = !Settings.ShowVirtualMemory;
-        ((ToolStripMenuItem)sender).Checked = Settings.ShowVirtualMemory;
       }) {
         Checked = Settings.ShowVirtualMemory,
+        CheckOnClick = true,
       });
 
       updateIntervalMenu = new ToolStripMenuItem("Update interval") {
@@ -613,7 +612,7 @@ namespace TrayRAMBooster {
 
       iconDoubleClickMenu = new ToolStripMenuItem("Icon double click action") {
         DropDownItems = {
-          new ToolStripMenuItem("None", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.None); }),
+          new ToolStripMenuItem("Nothing", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.None); }),
           new ToolStripMenuItem("Optimize", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.Optimize); }),
           new ToolStripMenuItem("Task Manager", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.TaskManager); }),
           new ToolStripMenuItem("Resource Monitor", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.ResourceMonitor); }),
