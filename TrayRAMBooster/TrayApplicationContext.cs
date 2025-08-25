@@ -122,15 +122,12 @@ namespace TrayRAMBooster {
     
     private string GetTrayIconText() {
       return Settings.TrayIconMode switch {
-        Enums.TrayIconMode.MemoryUsageValue => !Settings.ShowVirtualMemory
-                    ? $"Memory used:\nPhysical: {computer.Memory.Physical.Used}"
-                    : $"Memory used:\nPhysical: {computer.Memory.Physical.Used}\nVirtual: {computer.Memory.Virtual.Used}",
         Enums.TrayIconMode.MemoryAvailable => !Settings.ShowVirtualMemory
                     ? $"Memory available:\nPhysical: {computer.Memory.Physical.Free}"
                     : $"Memory available:\nPhysical: {computer.Memory.Physical.Free}\nVirtual: {computer.Memory.Virtual.Free}",
         _ => !Settings.ShowVirtualMemory
-                    ? $"Memory usage:\nPhysical: {computer.Memory.Physical.Used.Percentage}%"
-                    : $"Memory usage:\nPhysical: {computer.Memory.Physical.Used.Percentage}%\nVirtual: {computer.Memory.Virtual.Used.Percentage}%",
+                    ? $"Memory used:\nPhysical: {computer.Memory.Physical.Used}"
+                    : $"Memory used:\nPhysical: {computer.Memory.Physical.Used}\nVirtual: {computer.Memory.Virtual.Used}",
       };
     }
 
@@ -138,7 +135,7 @@ namespace TrayRAMBooster {
 
       if (fetchMemoryState && !computer.UpdateMemoryState()) return;
 
-      UpdateIcon();
+      UpdateIcon(fetchMemoryState);
 
       if (statusMenuLabel.Visible)
         ExecuteInUiThread(() => { UpdateStatusMenuItem(false); });
@@ -153,42 +150,42 @@ namespace TrayRAMBooster {
 
     private void UpdateIcon(bool force = false) {
 
-      string newIconValue = null;
-      switch (Settings.TrayIconMode) {
-        case Enums.TrayIconMode.MemoryUsageValue:
-          newIconValue = computer.Memory.Physical.Used.Value.ToTrayValue();
-          break;
-        case Enums.TrayIconMode.MemoryAvailable:
-          newIconValue = computer.Memory.Physical.Free.Value.ToTrayValue();
-          break;
-        case Enums.TrayIconMode.Image:
-        case Enums.TrayIconMode.MemoryUsagePercent:
-        default:
-          if (Settings.TrayIconMode == Enums.TrayIconMode.MemoryUsagePercent)
-            newIconValue = $"{computer.Memory.Physical.Used.Percentage:0}";
-          break;
-      }
-
+      string newIconValue = Settings.TrayIconMode switch {
+        Enums.TrayIconMode.MemoryAvailable => computer.Memory.Physical.Free.Value.ToTrayValue(),
+        Enums.TrayIconMode.MemoryUsageValue => computer.Memory.Physical.Used.Value.ToTrayValue(),
+        _ => $"{computer.Memory.Physical.Used.Percentage:0}",
+      };
       if (!force && string.Equals(iconValue, newIconValue, StringComparison.OrdinalIgnoreCase))
         return;
-      
       iconValue = newIconValue;
-
-      if (string.IsNullOrEmpty(iconValue) && optimizationProgressPercentage == 0) {
+      try {
+        if (optimizationProgressPercentage > 0) {
+          SafeSetTrayIcon(iconFactory.CreatePercentagePieIcon(optimizationProgressPercentage));
+        }
+        else {
+          switch (Settings.TrayIconMode) {
+            case Enums.TrayIconMode.Image:
+              SafeSetTrayIcon(imageIcon);
+              break;
+            case Enums.TrayIconMode.MemoryUsageBar:
+              SafeSetTrayIcon(iconFactory.CreatePercentageIcon(computer.Memory.Physical.Used.Percentage));
+              break;
+            case Enums.TrayIconMode.MemoryUsagePie:
+              SafeSetTrayIcon(iconFactory.CreatePercentagePieIcon((byte)computer.Memory.Physical.Used.Percentage));
+              break;
+            case Enums.TrayIconMode.MemoryUsagePercent:
+            case Enums.TrayIconMode.MemoryUsageValue:
+            case Enums.TrayIconMode.MemoryAvailable:
+              SafeSetTrayIcon(iconFactory.CreateTransparentIcon(iconValue));
+              break;
+          }
+        }
+      }
+      catch {
         SafeSetTrayIcon(imageIcon);
       }
-      else {
-        try {
-          SafeSetTrayIcon(optimizationProgressPercentage > 0
-            ? iconFactory.CreatePercentagePieIcon(optimizationProgressPercentage)
-            : iconFactory.CreateTransparentIcon(iconValue));
-        }
-        catch {
-          SafeSetTrayIcon(imageIcon);
-        }
-      }
     }
-    
+
     private void OnOptimizeProgressUpdate(byte value, string step) {
       var stepsCount = GetEnabledMemoryAreasCount();
       if (value > stepsCount)
@@ -522,9 +519,11 @@ namespace TrayRAMBooster {
       iconTypeMenu = new ToolStripMenuItem("Icon type") {
         DropDownItems = {
           new ToolStripMenuItem("Image", null, (_, _) => { SetIconType(Enums.TrayIconMode.Image); }),
+          new ToolStripMenuItem("Memory usage (Bar)", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsageBar); }),
+          new ToolStripMenuItem("Memory usage (Pie)", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsagePie); }),
           new ToolStripMenuItem("Memory usage (%)", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsagePercent); }),
+          new ToolStripMenuItem("Memory usage (Value)", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsageValue); }),
           new ToolStripMenuItem("Memory available", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryAvailable); }),
-          new ToolStripMenuItem("Memory usage", null, (_, _) => { SetIconType(Enums.TrayIconMode.MemoryUsageValue); }),
         }
       };
       iconTypeMenu.DropDown.Closing += OnContextMenuStripClosing;
