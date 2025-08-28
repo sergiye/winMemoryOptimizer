@@ -546,7 +546,7 @@ namespace TrayRAMBooster {
         using (var dialog = new ColorDialog()) {
           dialog.Color = Settings.TrayIconValueColor;
           if (dialog.ShowDialog() != DialogResult.OK || Settings.TrayIconValueColor == dialog.Color) return;
-          Settings.TrayIconValueColor = dialog.Color;
+          iconFactory.Color = Settings.TrayIconValueColor = dialog.Color;
           UpdateIcon(true);
         }
       }));
