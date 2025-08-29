@@ -49,6 +49,7 @@ namespace TrayRAMBooster {
       Optimize,
       TaskManager,
       ResourceMonitor,
+      ShowStatus,
     }
 
     public enum OptimizationReason {

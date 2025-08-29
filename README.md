@@ -42,8 +42,8 @@ The published version can be obtained from [releases](https://github.com/sergiye
 - `Run on startup` Runs the app after the system boots up. It creates an entry on Windows **Task Scheduler**
 - `Show optimization notifications` Sends a message to the notification area after optimization. It includes the approximate memory released
 - `Show virtual memory` It also monitors the virtual memory usage
+- `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it
 - `Auto update app` Keeps the app up to date. 
-<!-- - `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it -->
 
 ### Memory Areas
 

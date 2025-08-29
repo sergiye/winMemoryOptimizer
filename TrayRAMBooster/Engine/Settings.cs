@@ -30,7 +30,7 @@ namespace TrayRAMBooster {
 
     private static Color trayIconValueColor;
     private static Enums.TrayIconMode trayIconMode = Enums.TrayIconMode.MemoryAvailable;
-    private static Enums.DoubleClickAction doubleClickAction = Enums.DoubleClickAction.Optimize;
+    private static Enums.DoubleClickAction doubleClickAction = Enums.DoubleClickAction.ShowStatus;
     private static bool showVirtualMemory = true;
     private static bool showOptimizationNotifications = true;
     private static Enums.Priority runOnPriority = Enums.Priority.Low;
