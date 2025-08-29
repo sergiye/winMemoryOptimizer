@@ -42,7 +42,7 @@ The published version can be obtained from [releases](https://github.com/sergiye
 - `Run on startup` Runs the app after the system boots up. It creates an entry on Windows **Task Scheduler**
 - `Show optimization notifications` Sends a message to the notification area after optimization. It includes the approximate memory released
 - `Show virtual memory` It also monitors the virtual memory usage
-<!-- - `Auto update` Keeps the app up to date.  -->
+- `Auto update app` Keeps the app up to date. 
 <!-- - `Run on low priority` It limits the app resource usage by reducing the process priority and ensuring it runs efficiently. It might increase the optimization time, but it helps if your Windows freezes during it -->
 
 ### Memory Areas
@@ -54,9 +54,8 @@ The published version can be obtained from [releases](https://github.com/sergiye
 - `Standby List (Low Priority)` Flushes pages from the lowest-priority standby list to the free list
 - `System Working Set` Removes memory from the system cache working set
 
-### Processes excluded from optimization
-
-- You can build a list of processes to ignore when memory is optimized
+<!-- ### Processes excluded from optimization
+- You can build a list of processes to ignore when memory is optimized -->
 
 ### Tray icon type
 
@@ -78,13 +77,6 @@ The app generates logs in the Windows event
 
 ## Frequently Asked Questions (FAQ)
 
-### What are the project requirements?
-
-- Portable (Single .exe file) and super lightweight
-- Use of Windows native methods for memory management
-- Windows Registry to keep user settings
-- Windows Event to save logs
-
 ### Why has the app been flagged as Malware/Virus and blocked by Windows Defender, SmartScreen, or Antivirus?
 
 One of the reasons for this **false alarm** is that the application adds entries to the registry and task scheduler to run the application at startup. Windows doesn't “like” applications with administrator privileges running at startup. Sorry, but the application cannot deep clean memory without administrator privileges.
@@ -94,13 +86,6 @@ Everyone can submit the executable to Microsoft, usually, it takes up to 72 hour
 It helps if more users [submit the app for malware analysis](https://www.microsoft.com/en-us/wdsi/filesubmission)
 
 Meanwhile, as a workaround, you can [add an exclusion to Windows Security](https://support.microsoft.com/en-us/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26)
-
-## License
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License  along with this program.  If not, see http://www.gnu.org/licenses/.
 
 ## How can I help improve it?
 The TrayRAMBooster team welcomes feedback and contributions!<br/>
@@ -116,3 +101,8 @@ Also, don't forget to star the repository to help other people find it.
 
 ## Donate!
 Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.
+
+## License
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.

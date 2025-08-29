@@ -8,74 +8,69 @@ using sergiye.Common;
 namespace TrayRAMBooster {
 
   internal static class Settings {
+
+    static class RegistryKey {
+      public const string Settings = @"SOFTWARE\sergiye\TrayRAMBooster";
+      public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
+    }
+
+    static class RegistryName {
+      public const string AutoOptimizationInterval = "AutoOptimizationInterval";
+      public const string AutoOptimizationMemoryUsage = "AutoOptimizationMemoryUsage";
+      public const string UpdateIntervalSeconds = "UpdateIntervalSeconds";
+      public const string MemoryAreas = "MemoryAreas";
+      public const string RunOnPriority = "RunOnPriority";
+      public const string ShowOptimizationNotifications = "ShowOptimizationNotifications";
+      public const string ShowVirtualMemory = "ShowVirtualMemory";
+      public const string TrayIcon = "TrayIcon";
+      public const string DoubleClickAction = "DoubleClickAction";
+      public const string TrayIconValueColor = "TrayIconValueColor";
+      public const string AutoUpdateApp = "AutoUpdateApp";
+    }
+
     private static Color trayIconValueColor;
-    private static Enums.TrayIconMode trayIconMode;
-    private static Enums.DoubleClickAction doubleClickAction;
-    private static bool showVirtualMemory;
-    private static bool showOptimizationNotifications;
-    private static Enums.Priority runOnPriority;
+    private static Enums.TrayIconMode trayIconMode = Enums.TrayIconMode.MemoryAvailable;
+    private static Enums.DoubleClickAction doubleClickAction = Enums.DoubleClickAction.Optimize;
+    private static bool showVirtualMemory = true;
+    private static bool showOptimizationNotifications = true;
+    private static Enums.Priority runOnPriority = Enums.Priority.Low;
     private static Enums.MemoryAreas memoryAreas;
-    private static int updateIntervalSeconds;
+    private static int updateIntervalSeconds = 30;
     private static int autoOptimizationMemoryUsage;
     private static int autoOptimizationInterval;
+    private static bool autoUpdateApp;
 
     static Settings() {
-      autoOptimizationInterval = 0;
-      autoOptimizationMemoryUsage = 0;
-      updateIntervalSeconds = 30;
       memoryAreas = Enums.MemoryAreas.ModifiedPageList 
                   | Enums.MemoryAreas.ProcessesWorkingSet 
                   | Enums.MemoryAreas.StandbyListLowPriority 
                   | Enums.MemoryAreas.SystemWorkingSet;
       ProcessExclusionList = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-      runOnPriority = Enums.Priority.Low;
-      showOptimizationNotifications = true;
-      showVirtualMemory = true;
-      trayIconMode = Enums.TrayIconMode.MemoryAvailable;
-      doubleClickAction = Enums.DoubleClickAction.Optimize;
       trayIconValueColor = WinApiHelper.IsTaskbarDark() 
         ? Color.Lime //Cyan / SpringGreen
         : Color.DarkGreen; //Teal / Green
 
       try {
-        using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.ProcessExclusionList)) {
+        using (var key = Registry.CurrentUser.OpenSubKey(RegistryKey.ProcessExclusionList)) {
           if (key != null) {
             foreach (var name in key.GetValueNames())
               ProcessExclusionList.Add(name.RemoveWhitespaces().Replace(".exe", string.Empty).ToLower());
           }
         }
 
-        using (var key = Registry.CurrentUser.OpenSubKey(Constants.RegistryKey.Settings)) {
+        using (var key = Registry.CurrentUser.OpenSubKey(RegistryKey.Settings)) {
           if (key == null) return;
-          autoOptimizationInterval = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationInterval, autoOptimizationInterval));
-          autoOptimizationMemoryUsage = Convert.ToInt32(key.GetValue(Constants.RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage));
-          updateIntervalSeconds = Convert.ToInt32(key.GetValue(Constants.RegistryName.UpdateIntervalSeconds, updateIntervalSeconds));
-
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.MemoryAreas, memoryAreas)),
-                out Enums.MemoryAreas memoryAreasValue) && memoryAreasValue.IsValid()) {
-            if ((memoryAreasValue & Enums.MemoryAreas.StandbyList) != 0 &&
-                (memoryAreasValue & Enums.MemoryAreas.StandbyListLowPriority) != 0)
-              memoryAreasValue &= ~Enums.MemoryAreas.StandbyListLowPriority;
-
-            memoryAreas = memoryAreasValue;
-          }
-
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.RunOnPriority, runOnPriority)),
-                out Enums.Priority runOnPriorityValue) && runOnPriorityValue.IsValid())
-            runOnPriority = runOnPriorityValue;
-
-          showOptimizationNotifications = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowOptimizationNotifications, showOptimizationNotifications));
-          showVirtualMemory = Convert.ToBoolean(key.GetValue(Constants.RegistryName.ShowVirtualMemory, showVirtualMemory));
-
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.TrayIcon, trayIconMode)),
-                out Enums.TrayIconMode trayIcon) && trayIcon.IsValid())
-            trayIconMode = trayIcon;
-
-          if (Enum.TryParse(Convert.ToString(key.GetValue(Constants.RegistryName.DoubleClickAction, doubleClickAction)),
-                out Enums.DoubleClickAction clickAction) && doubleClickAction.IsValid())
-            doubleClickAction = clickAction;
-
-          trayIconValueColor = Color.FromArgb(Convert.ToInt32(key.GetValue(Constants.RegistryName.TrayIconValueColor, trayIconValueColor)));
+          autoOptimizationInterval = key.Get(RegistryName.AutoOptimizationInterval, autoOptimizationInterval);
+          autoOptimizationMemoryUsage = key.Get(RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage);
+          updateIntervalSeconds = key.Get(RegistryName.UpdateIntervalSeconds, updateIntervalSeconds);
+          showOptimizationNotifications = key.Get(RegistryName.ShowOptimizationNotifications, showOptimizationNotifications);
+          showVirtualMemory = key.Get(RegistryName.ShowVirtualMemory, showVirtualMemory);
+          autoUpdateApp = key.Get(RegistryName.AutoUpdateApp, autoUpdateApp);
+          trayIconValueColor = key.Get(RegistryName.TrayIconValueColor, trayIconValueColor);
+          memoryAreas = key.GetEnum(RegistryName.MemoryAreas, memoryAreas);
+          runOnPriority = key.GetEnum(RegistryName.RunOnPriority, runOnPriority);
+          trayIconMode = key.GetEnum(RegistryName.TrayIcon, trayIconMode);
+          doubleClickAction = key.GetEnum(RegistryName.DoubleClickAction, doubleClickAction);
         }
       }
       catch (Exception e) {
@@ -151,6 +146,15 @@ namespace TrayRAMBooster {
       }
     }
 
+    public static bool AutoUpdateApp {
+      get => autoUpdateApp;
+      set {
+        if (autoUpdateApp == value) return;
+        autoUpdateApp = value;
+        Save();
+      }
+    }
+
     public static Enums.TrayIconMode TrayIconMode {
       get => trayIconMode;
       set {
@@ -180,10 +184,10 @@ namespace TrayRAMBooster {
 
     public static void Save() {
       try {
-        Registry.CurrentUser.DeleteSubKey(Constants.RegistryKey.ProcessExclusionList, false);
+        Registry.CurrentUser.DeleteSubKey(RegistryKey.ProcessExclusionList, false);
 
         if (ProcessExclusionList.Any()) {
-          using (var key = Registry.CurrentUser.CreateSubKey(Constants.RegistryKey.ProcessExclusionList)) {
+          using (var key = Registry.CurrentUser.CreateSubKey(RegistryKey.ProcessExclusionList)) {
             if (key != null) {
               foreach (var process in ProcessExclusionList)
                 key.SetValue(process.RemoveWhitespaces().Replace(".exe", string.Empty).ToLower(), string.Empty,
@@ -192,18 +196,19 @@ namespace TrayRAMBooster {
           }
         }
 
-        using (var key = Registry.CurrentUser.CreateSubKey(Constants.RegistryKey.Settings)) {
+        using (var key = Registry.CurrentUser.CreateSubKey(RegistryKey.Settings)) {
           if (key == null) return;
-          key.SetValue(Constants.RegistryName.AutoOptimizationInterval, AutoOptimizationInterval);
-          key.SetValue(Constants.RegistryName.AutoOptimizationMemoryUsage, AutoOptimizationMemoryUsage);
-          key.SetValue(Constants.RegistryName.UpdateIntervalSeconds, UpdateIntervalSeconds);
-          key.SetValue(Constants.RegistryName.MemoryAreas, (int) MemoryAreas);
-          key.SetValue(Constants.RegistryName.RunOnPriority, (int) RunOnPriority);
-          key.SetValue(Constants.RegistryName.ShowOptimizationNotifications, ShowOptimizationNotifications ? 1 : 0);
-          key.SetValue(Constants.RegistryName.ShowVirtualMemory, ShowVirtualMemory ? 1 : 0);
-          key.SetValue(Constants.RegistryName.TrayIcon, (int) TrayIconMode);
-          key.SetValue(Constants.RegistryName.DoubleClickAction, (int) DoubleClickAction);
-          key.SetValue(Constants.RegistryName.TrayIconValueColor, TrayIconValueColor.ToArgb());
+          key.SetValue(RegistryName.AutoOptimizationInterval, autoOptimizationInterval);
+          key.SetValue(RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage);
+          key.SetValue(RegistryName.UpdateIntervalSeconds, updateIntervalSeconds);
+          key.SetValue(RegistryName.MemoryAreas, (int) memoryAreas);
+          key.SetValue(RegistryName.RunOnPriority, (int) runOnPriority);
+          key.SetValue(RegistryName.ShowOptimizationNotifications, showOptimizationNotifications ? 1 : 0);
+          key.SetValue(RegistryName.ShowVirtualMemory, showVirtualMemory ? 1 : 0);
+          key.SetValue(RegistryName.AutoUpdateApp, autoUpdateApp ? 1 : 0);
+          key.SetValue(RegistryName.TrayIcon, (int) trayIconMode);
+          key.SetValue(RegistryName.DoubleClickAction, (int) doubleClickAction);
+          key.SetValue(RegistryName.TrayIconValueColor, trayIconValueColor.ToArgb());
         }
       }
       catch (Exception e) {

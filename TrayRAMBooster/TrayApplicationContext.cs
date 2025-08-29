@@ -21,6 +21,7 @@ namespace TrayRAMBooster {
     private readonly SynchronizationContext uiContext;
     private readonly ComputerService computer;
     private readonly StartupManager startupManager;
+    private readonly System.Windows.Forms.Timer autoUpdateTimer;
     private ToolStripLabel statusMenuLabel;
     private ToolStripMenuItem iconTypeMenu;
     private ToolStripMenuItem iconDoubleClickMenu;
@@ -96,6 +97,13 @@ namespace TrayRAMBooster {
       startupManager = new StartupManager();
       computer = new ComputerService();
       computer.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
+
+      autoUpdateTimer = new System.Windows.Forms.Timer(components);
+      autoUpdateTimer.Tick += async (_, _) => {
+        await Updater.CheckForUpdatesAsync(Updater.CheckUpdatesMode.AutoUpdate);
+      };
+      autoUpdateTimer.Interval = 6 * 60 * 60 * 1000; //every 6 hours
+      autoUpdateTimer.Enabled = Settings.AutoUpdateApp;
 
       AddMenuItems();
       Theme.SetAutoTheme();
@@ -552,8 +560,15 @@ namespace TrayRAMBooster {
       }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
       //about
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto update app", null, (sender, _) => {
+        Settings.AutoUpdateApp = !Settings.AutoUpdateApp;
+        autoUpdateTimer.Enabled = Settings.AutoUpdateApp;
+      }) {
+        Checked = Settings.AutoUpdateApp,
+        CheckOnClick = true,
+      });
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Check for updates", null,
-        (_, _) => { Updater.CheckForUpdates(false); }));
+        (_, _) => { Updater.CheckForUpdates(Updater.CheckUpdatesMode.AllMessages); }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Site", null, (_, _) => { Updater.VisitAppSite(); }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("About", null, (_, _) => { Updater.ShowAbout(); }));
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => { ExitThread(); }));

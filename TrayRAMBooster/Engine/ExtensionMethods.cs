@@ -16,13 +16,6 @@ namespace TrayRAMBooster {
       return string.Join(". ", messages.Distinct());
     }
 
-    public static bool IsValid(this Enum value) {
-      if (value == null)
-        return false;
-      var firstDigit = value.ToString()[0];
-      return !char.IsDigit(firstDigit) && firstDigit != '-';
-    }
-
     public static string RemoveWhitespaces(this string value) {
       return new string(value.ToCharArray().Where(c => !char.IsWhiteSpace(c)).ToArray());
     }

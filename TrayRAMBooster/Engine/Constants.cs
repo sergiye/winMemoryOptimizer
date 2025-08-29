@@ -2,24 +2,6 @@
   
   internal static class Constants {
     
-    public static class RegistryKey {
-      public const string Settings = @"SOFTWARE\sergiye\TrayRAMBooster";
-      public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
-    }
-
-    public static class RegistryName {
-      public const string AutoOptimizationInterval = "AutoOptimizationInterval";
-      public const string AutoOptimizationMemoryUsage = "AutoOptimizationMemoryUsage";
-      public const string UpdateIntervalSeconds = "UpdateIntervalSeconds";
-      public const string MemoryAreas = "MemoryAreas";
-      public const string RunOnPriority = "RunOnPriority";
-      public const string ShowOptimizationNotifications = "ShowOptimizationNotifications";
-      public const string ShowVirtualMemory = "ShowVirtualMemory";
-      public const string TrayIcon = "TrayIcon";
-      public const string DoubleClickAction = "DoubleClickAction";
-      public const string TrayIconValueColor = "TrayIconValueColor";
-    }
-
     public static class Windows {
       public static class Privilege {
         public const string SeDebugName = "SeDebugPrivilege"; // Required to debug and adjust the memory of a process owned by another account. User Right: Debug programs.
