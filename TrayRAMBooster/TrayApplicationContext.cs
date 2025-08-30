@@ -14,6 +14,7 @@ namespace TrayRAMBooster {
 
     private readonly IContainer components = new Container();
     private const int AutoOptimizationMemoryUsageInterval = 5; // Minute
+    private const int AutoUpdateCheckInterval = 24; // Hours
 
     private readonly Icon imageIcon;
     private readonly NotifyIcon notifyIcon;
@@ -21,7 +22,6 @@ namespace TrayRAMBooster {
     private readonly SynchronizationContext uiContext;
     private readonly ComputerService computer;
     private readonly StartupManager startupManager;
-    private readonly System.Windows.Forms.Timer autoUpdateTimer;
     private ToolStripMenuItem statusMenuLabel;
     private ToolStripLabel statusInfoMenuLabel;
     private ToolStripMenuItem iconTypeMenu;
@@ -36,6 +36,7 @@ namespace TrayRAMBooster {
     private DateTimeOffset nextAutoOptimizationByInterval;
     private DateTimeOffset lastAutoOptimizationByInterval = DateTimeOffset.Now;
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
+    private DateTimeOffset lastUpdateCheckTime = DateTimeOffset.Now.AddHours(-AutoUpdateCheckInterval).AddSeconds(10);
     private byte optimizationProgressPercentage;
 
     public TrayApplicationContext() {
@@ -51,7 +52,7 @@ namespace TrayRAMBooster {
       //  var mi = typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic);
       //  mi?.Invoke(notifyIcon, null);
       //};
-      notifyIcon.MouseMove += (s, e) => {
+      notifyIcon.MouseMove += (_, _) => {
         var iconText = GetTrayIconText();
         if (notifyIcon.Text != iconText)
           notifyIcon.Text = iconText.Length > 63 ? iconText.Substring(0, 63) : iconText;
@@ -65,8 +66,8 @@ namespace TrayRAMBooster {
             Process.Start(new ProcessStartInfo("taskmgr.exe") { UseShellExecute = true });
             break;
           case Enums.DoubleClickAction.ResourceMonitor:
-            var currentSessionID = Process.GetCurrentProcess().SessionId;
-            var process = Process.GetProcessesByName("perfmon").Where(p => p.SessionId == currentSessionID).FirstOrDefault();
+            var currentSessionId = Process.GetCurrentProcess().SessionId;
+            var process = Process.GetProcessesByName("perfmon").FirstOrDefault(p => p.SessionId == currentSessionId);
             if (process == null) {
               Process.Start(new ProcessStartInfo("resmon.exe") { UseShellExecute = true });
             }
@@ -101,13 +102,6 @@ namespace TrayRAMBooster {
       startupManager = new StartupManager();
       computer = new ComputerService();
       computer.OnOptimizeProgressUpdate += OnOptimizeProgressUpdate;
-
-      autoUpdateTimer = new System.Windows.Forms.Timer(components);
-      autoUpdateTimer.Tick += async (_, _) => {
-        await Updater.CheckForUpdatesAsync(Updater.CheckUpdatesMode.AutoUpdate);
-      };
-      autoUpdateTimer.Interval = 6 * 60 * 60 * 1000; //every 6 hours
-      autoUpdateTimer.Enabled = Settings.AutoUpdateApp;
 
       AddMenuItems();
       Theme.SetAutoTheme();
@@ -346,35 +340,52 @@ namespace TrayRAMBooster {
 
     private async Task MonitorComputer() {
       SetPriority();
+      var prevUpdateTime = DateTimeOffset.MinValue; 
       while (true) {
         try {
+          var now = DateTimeOffset.Now;
+          if (prevUpdateTime.AddSeconds(Settings.UpdateIntervalSeconds) > now)
+            continue;
+
+          if (Settings.AutoUpdateApp && lastUpdateCheckTime.AddHours(AutoUpdateCheckInterval) < now) {
+            _ = Updater.CheckForUpdatesAsync(Updater.CheckUpdatesMode.AutoUpdate);
+            lastUpdateCheckTime = now;
+          }
+
           if (IsBusy) {
             await Task.Delay(1000).ConfigureAwait(false);
             continue;
           }
+
+          prevUpdateTime = now;
+          
           if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
-            if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue && DateTimeOffset.Now >= nextAutoOptimizationByInterval) {
+            if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue &&
+                now >= nextAutoOptimizationByInterval) {
               Optimize(Enums.OptimizationReason.Scheduled);
-              lastAutoOptimizationByInterval = DateTimeOffset.Now;
-              nextAutoOptimizationByInterval = lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
+              lastAutoOptimizationByInterval = now;
+              nextAutoOptimizationByInterval =
+                lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
             }
             else {
               computer.UpdateMemoryState();
               if (Settings.AutoOptimizationMemoryUsage > 0 &&
                   computer.Memory.Physical.Free.Percentage < Settings.AutoOptimizationMemoryUsage &&
-                  DateTimeOffset.Now.Subtract(lastAutoOptimizationByMemoryUsage).TotalMinutes >= AutoOptimizationMemoryUsageInterval) {
+                  now.Subtract(lastAutoOptimizationByMemoryUsage).TotalMinutes >=
+                  AutoOptimizationMemoryUsageInterval) {
                 Optimize(Enums.OptimizationReason.Usage);
-                lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
+                lastAutoOptimizationByMemoryUsage = now;
               }
             }
           }
           
           Update(true);
-
-          await Task.Delay(Settings.UpdateIntervalSeconds * 1000).ConfigureAwait(false);
         }
         catch (Exception ex) {
           Logger.Debug(ex.GetMessage());
+        }
+        finally {
+          await Task.Delay(1000).ConfigureAwait(false);
         }
       }
     }
@@ -437,9 +448,8 @@ namespace TrayRAMBooster {
       }) {
         Checked = startupManager.Startup,
       });
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto-update application", null, (sender, _) => {
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Auto-update application", null, (_, _) => {
         Settings.AutoUpdateApp = !Settings.AutoUpdateApp;
-        autoUpdateTimer.Enabled = Settings.AutoUpdateApp;
       }) {
         Checked = Settings.AutoUpdateApp,
         CheckOnClick = true,
@@ -505,19 +515,19 @@ namespace TrayRAMBooster {
       #endregion
 
       //settings
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (sender, _) => {
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show optimization notifications", null, (_, _) => {
         Settings.ShowOptimizationNotifications = !Settings.ShowOptimizationNotifications;
       }) {
         Checked = Settings.ShowOptimizationNotifications,
         CheckOnClick = true,
       });
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show virtual memory", null, (sender, _) => {
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Show virtual memory", null, (_, _) => {
         Settings.ShowVirtualMemory = !Settings.ShowVirtualMemory;
       }) {
         Checked = Settings.ShowVirtualMemory,
         CheckOnClick = true,
       });
-      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Run on low priority", null, (sender, _) => {
+      notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Run on low priority", null, (_, _) => {
         Settings.RunOnPriority = Settings.RunOnPriority == Enums.Priority.Low ? Enums.Priority.Normal : Enums.Priority.Low;
         SetPriority();
       }) {
@@ -588,7 +598,10 @@ namespace TrayRAMBooster {
       notifyIcon.ContextMenuStrip.Items.Add(statusMenuLabel);
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Help") {
         DropDownItems = {
-          new ToolStripMenuItem("Check for updates", null, (_, _) => { Updater.CheckForUpdates(Updater.CheckUpdatesMode.AllMessages); }),
+          new ToolStripMenuItem("Check for updates", null, (_, _) => { 
+            if (Updater.CheckForUpdates(Updater.CheckUpdatesMode.AllMessages))
+              lastUpdateCheckTime = DateTimeOffset.Now;
+          }),
           new ToolStripMenuItem("Site", null, (_, _) => { Updater.VisitAppSite(); }),
           new ToolStripMenuItem("About", null, (_, _) => { Updater.ShowAbout(); }),
         }
