@@ -17,7 +17,7 @@ It's portable, and you do not need to install it, but it requires administrator 
 
 ## What does it look like?
 
-Here's a preview of the app's UI running on Windows 10:
+Here is an example of the application running on Windows 10 (light/dark theme):
 
 [<img src="https://github.com/sergiye/TrayRAMBooster/raw/master/preview.png" alt="preview"/>](https://github.com/sergiye/TrayRAMBooster/raw/master/preview.png)
 
