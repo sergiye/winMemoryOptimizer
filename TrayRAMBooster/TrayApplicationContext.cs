@@ -17,7 +17,7 @@ namespace TrayRAMBooster {
     private const int AutoUpdateCheckInterval = 24; // Hours
 
     private readonly Icon imageIcon;
-    private readonly NotifyIcon notifyIcon;
+    private readonly NotifyIconAdv notifyIcon;
     private readonly IconFactory iconFactory;
     private readonly SynchronizationContext uiContext;
     private readonly ComputerService computer;
@@ -38,12 +38,10 @@ namespace TrayRAMBooster {
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
     private DateTimeOffset lastUpdateCheckTime = DateTimeOffset.Now.AddHours(-AutoUpdateCheckInterval).AddSeconds(10);
     private byte optimizationProgressPercentage;
-    private DateTime lastClickTime = DateTime.MinValue;
-    private readonly int doubleClickThreshold = SystemInformation.DoubleClickTime;
 
     public TrayApplicationContext() {
       imageIcon = Icon.ExtractAssociatedIcon(Updater.CurrentFileLocation);
-      notifyIcon = new NotifyIcon(components) {
+      notifyIcon = new NotifyIconAdv() {
         ContextMenuStrip = new ContextMenuStrip(),
         Icon = imageIcon,
         Text = Updater.ApplicationTitle,
@@ -59,18 +57,7 @@ namespace TrayRAMBooster {
         if (notifyIcon.Text != iconText)
           notifyIcon.Text = iconText.Length > 63 ? iconText.Substring(0, 63) : iconText;
       };
-      notifyIcon.MouseDown += (s, e) => {
-        if (e.Button != MouseButtons.Left)
-          return;
-        var now = DateTime.Now;
-        if ((now - lastClickTime).TotalMilliseconds > doubleClickThreshold) {
-          lastClickTime = now;
-          return;
-        }
-        //real double-click
-        lastClickTime = DateTime.MinValue;
-      //};
-      //notifyIcon.DoubleClick += (s, e) => {
+      notifyIcon.DoubleClick += (s, e) => {
         switch (Settings.DoubleClickAction) {
           case Enums.DoubleClickAction.Optimize:
             MenuItemOptimizeClick(s, e);
@@ -85,8 +72,8 @@ namespace TrayRAMBooster {
               Process.Start(new ProcessStartInfo("resmon.exe") { UseShellExecute = true });
             }
             else {
-              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_RESTORE);
-              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_SHOWNORMAL);
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiConstants.SW_RESTORE);
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiConstants.SW_SHOWNORMAL);
               WinApiHelper.SetForegroundWindow(process.MainWindowHandle);
             }
             break;
