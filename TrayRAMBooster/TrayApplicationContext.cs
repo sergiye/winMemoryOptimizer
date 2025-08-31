@@ -38,6 +38,8 @@ namespace TrayRAMBooster {
     private DateTimeOffset lastAutoOptimizationByMemoryUsage = DateTimeOffset.Now;
     private DateTimeOffset lastUpdateCheckTime = DateTimeOffset.Now.AddHours(-AutoUpdateCheckInterval).AddSeconds(10);
     private byte optimizationProgressPercentage;
+    private DateTime lastClickTime = DateTime.MinValue;
+    private readonly int doubleClickThreshold = SystemInformation.DoubleClickTime;
 
     public TrayApplicationContext() {
       imageIcon = Icon.ExtractAssociatedIcon(Updater.CurrentFileLocation);
@@ -45,7 +47,7 @@ namespace TrayRAMBooster {
         ContextMenuStrip = new ContextMenuStrip(),
         Icon = imageIcon,
         Text = Updater.ApplicationTitle,
-        Visible = true
+        Visible = true,
       };
       //notifyIcon.MouseUp += (s, e) => {
       //  if (e.Button != MouseButtons.Left) return;
@@ -57,7 +59,18 @@ namespace TrayRAMBooster {
         if (notifyIcon.Text != iconText)
           notifyIcon.Text = iconText.Length > 63 ? iconText.Substring(0, 63) : iconText;
       };
-      notifyIcon.DoubleClick += (s, e) => {
+      notifyIcon.MouseDown += (s, e) => {
+        if (e.Button != MouseButtons.Left)
+          return;
+        var now = DateTime.Now;
+        if ((now - lastClickTime).TotalMilliseconds > doubleClickThreshold) {
+          lastClickTime = now;
+          return;
+        }
+        //real double-click
+        lastClickTime = DateTime.MinValue;
+      //};
+      //notifyIcon.DoubleClick += (s, e) => {
         switch (Settings.DoubleClickAction) {
           case Enums.DoubleClickAction.Optimize:
             MenuItemOptimizeClick(s, e);
