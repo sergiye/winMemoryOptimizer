@@ -24,6 +24,7 @@
         public const int SystemCombinePhysicalMemoryInformation = 130; // 0x82
         public const int SystemFileCacheInformation = 21; // 0x15
         public const int SystemMemoryListInformation = 80; // 0x50
+        public const int SystemRegistryReconciliationInformation = 155; // 0x9B
       }
 
       public static class SystemMemoryListCommand {

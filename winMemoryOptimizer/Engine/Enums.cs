@@ -23,6 +23,7 @@ namespace winMemoryOptimizer {
       SystemWorkingSet = 32,
       ModifiedFileCache = 64,
       SystemFileCache = 128,
+      RegistryCache = 256,
     }
     
     public enum MemoryUnit {

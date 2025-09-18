@@ -218,6 +218,8 @@ namespace winMemoryOptimizer {
         Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedFileCache;
       if (!ComputerService.HasSystemFileCache)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemFileCache;
+      if (!ComputerService.HasRegistryCache)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.RegistryCache;
       return Settings.MemoryAreas;
     }
 
@@ -237,6 +239,8 @@ namespace winMemoryOptimizer {
       if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.ModifiedFileCache))
         result++;
       if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.SystemFileCache))
+        result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.RegistryCache))
         result++;
       return result;
     }
@@ -522,6 +526,9 @@ namespace winMemoryOptimizer {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System File Cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.SystemFileCache);
         }) { Tag = Enums.MemoryAreas.SystemFileCache });
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Registry Cache", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.RegistryCache);
+        }) { Tag = Enums.MemoryAreas.RegistryCache });
       }
       optimizationTypesMenu.DropDown.Closing += OnContextMenuStripClosing;
       UpdateAreasMenuItems();

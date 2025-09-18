@@ -20,6 +20,7 @@ namespace winMemoryOptimizer {
     public static bool HasSystemWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasModifiedFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasSystemFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
+    public static bool HasRegistryCache => OperatingSystemHelper.IsWindows81OrGreater;
 
     private WindowsStructs.MemoryStatusEx memoryStatusEx;
 
@@ -231,6 +232,27 @@ namespace winMemoryOptimizer {
         }
         catch (Exception e) {
           errorLog.AppendLine(string.Format(errorLogFormat, "System File Cache", "Error", e.GetMessage()));
+        }
+      }
+
+      if ((areas & Enums.MemoryAreas.RegistryCache) != 0) {
+        try {
+          if (OnOptimizeProgressUpdate != null) {
+            value++;
+            OnOptimizeProgressUpdate(value, "Registry Cache");
+          }
+
+          stopwatch.Restart();
+
+          OptimizeRegistryCache();
+
+          runtime = runtime.Add(stopwatch.Elapsed);
+
+          infoLog.AppendLine(string.Format(infoLogFormat, "Registry Cache", "Optimized",
+            stopwatch.Elapsed.TotalSeconds, "seconds"));
+        }
+        catch (Exception e) {
+          errorLog.AppendLine(string.Format(errorLogFormat, "Registry Cache", "Error", e.GetMessage()));
         }
       }
 
@@ -505,6 +527,14 @@ namespace winMemoryOptimizer {
       var fileCacheSize = IntPtr.Subtract(IntPtr.Zero, 1); // Flush
 
       if (!NativeMethods.SetSystemFileCacheSize(fileCacheSize, fileCacheSize, 0))
+        throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    private void OptimizeRegistryCache() {
+      if (!HasRegistryCache)
+        throw new Exception("The Registry Cache optimization is not supported on this version of the operating system");
+
+      if (NativeMethods.NtSetSystemInformation(Constants.Windows.SystemInformationClass.SystemRegistryReconciliationInformation, IntPtr.Zero, 0) != Constants.Windows.SystemErrorCode.ErrorSuccess)
         throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 
