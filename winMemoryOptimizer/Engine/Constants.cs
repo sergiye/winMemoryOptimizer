@@ -1,4 +1,4 @@
-﻿namespace TrayRAMBooster {
+﻿namespace winMemoryOptimizer {
   
   internal static class Constants {
     

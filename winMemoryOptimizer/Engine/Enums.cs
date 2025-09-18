@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
 
   internal static class Enums {
     

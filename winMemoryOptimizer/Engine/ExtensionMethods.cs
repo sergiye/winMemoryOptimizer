@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
 
   internal static class ExtensionMethods {
 

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using sergiye.Common;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
   
   internal static class Logger {
     

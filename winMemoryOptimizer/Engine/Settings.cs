@@ -5,12 +5,13 @@ using System.Linq;
 using Microsoft.Win32;
 using sergiye.Common;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
 
   internal static class Settings {
 
     static class RegistryKey {
-      public const string Settings = @"SOFTWARE\sergiye\TrayRAMBooster";
+      public const string Settings = @"SOFTWARE\sergiye\winMemoryOptimizer";
+      public const string OldSettings = @"SOFTWARE\sergiye\TrayRAMBooster";
       public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
     }
 
@@ -58,19 +59,8 @@ namespace TrayRAMBooster {
           }
         }
 
-        using (var key = Registry.CurrentUser.OpenSubKey(RegistryKey.Settings)) {
-          if (key == null) return;
-          autoOptimizationInterval = key.Get(RegistryName.AutoOptimizationInterval, autoOptimizationInterval);
-          autoOptimizationMemoryUsage = key.Get(RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage);
-          updateIntervalSeconds = key.Get(RegistryName.UpdateIntervalSeconds, updateIntervalSeconds);
-          showOptimizationNotifications = key.Get(RegistryName.ShowOptimizationNotifications, showOptimizationNotifications);
-          showVirtualMemory = key.Get(RegistryName.ShowVirtualMemory, showVirtualMemory);
-          autoUpdateApp = key.Get(RegistryName.AutoUpdateApp, autoUpdateApp);
-          trayIconValueColor = key.Get(RegistryName.TrayIconValueColor, trayIconValueColor);
-          memoryAreas = key.GetEnum(RegistryName.MemoryAreas, memoryAreas);
-          runOnPriority = key.GetEnum(RegistryName.RunOnPriority, runOnPriority);
-          trayIconMode = key.GetEnum(RegistryName.TrayIcon, trayIconMode);
-          doubleClickAction = key.GetEnum(RegistryName.DoubleClickAction, doubleClickAction);
+        if (!ReadSettings(RegistryKey.Settings)) {
+          ReadSettings(RegistryKey.OldSettings);
         }
       }
       catch (Exception e) {
@@ -81,6 +71,24 @@ namespace TrayRAMBooster {
       }
     }
 
+    private static bool ReadSettings(string settingsPath) {
+      using (var key = Registry.CurrentUser.OpenSubKey(settingsPath)) {
+        if (key == null) return false;
+        autoOptimizationInterval = key.Get(RegistryName.AutoOptimizationInterval, autoOptimizationInterval);
+        autoOptimizationMemoryUsage = key.Get(RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage);
+        updateIntervalSeconds = key.Get(RegistryName.UpdateIntervalSeconds, updateIntervalSeconds);
+        showOptimizationNotifications = key.Get(RegistryName.ShowOptimizationNotifications, showOptimizationNotifications);
+        showVirtualMemory = key.Get(RegistryName.ShowVirtualMemory, showVirtualMemory);
+        autoUpdateApp = key.Get(RegistryName.AutoUpdateApp, autoUpdateApp);
+        trayIconValueColor = key.Get(RegistryName.TrayIconValueColor, trayIconValueColor);
+        memoryAreas = key.GetEnum(RegistryName.MemoryAreas, memoryAreas);
+        runOnPriority = key.GetEnum(RegistryName.RunOnPriority, runOnPriority);
+        trayIconMode = key.GetEnum(RegistryName.TrayIcon, trayIconMode);
+        doubleClickAction = key.GetEnum(RegistryName.DoubleClickAction, doubleClickAction);
+        return true;
+      }
+    }
+    
     public static int AutoOptimizationInterval {
       get => autoOptimizationInterval;
       set {
@@ -184,7 +192,8 @@ namespace TrayRAMBooster {
 
     public static void Save() {
       try {
-        Registry.CurrentUser.DeleteSubKey(RegistryKey.ProcessExclusionList, false);
+        Registry.CurrentUser.DeleteSubKey(RegistryKey.OldSettings, false);
+        Registry.CurrentUser.DeleteSubKey(RegistryKey.Settings, false);
 
         if (ProcessExclusionList.Any()) {
           using (var key = Registry.CurrentUser.CreateSubKey(RegistryKey.ProcessExclusionList)) {

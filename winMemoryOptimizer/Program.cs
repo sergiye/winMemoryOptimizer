@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using sergiye.Common;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
   
   internal class Program {
     

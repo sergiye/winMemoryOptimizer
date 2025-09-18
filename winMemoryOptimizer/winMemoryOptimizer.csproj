@@ -16,37 +16,37 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
-    <AssemblyName>TrayRAMBooster</AssemblyName>
+    <AssemblyName>winMemoryOptimizer</AssemblyName>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
-    <AssemblyName>TrayRAMBooster_x86</AssemblyName>
+    <AssemblyName>winMemoryOptimizer_x86</AssemblyName>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
-    <AssemblyName>TrayRAMBooster_x64</AssemblyName>
+    <AssemblyName>winMemoryOptimizer_x64</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>True</Optimize>
     <DebugType>none</DebugType>
-    <AssemblyName>TrayRAMBooster</AssemblyName>
+    <AssemblyName>winMemoryOptimizer</AssemblyName>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Optimize>True</Optimize>
     <DebugType>none</DebugType>
-    <AssemblyName>TrayRAMBooster_x64</AssemblyName>
+    <AssemblyName>winMemoryOptimizer_x64</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <Optimize>True</Optimize>
     <DebugType>none</DebugType>
-    <AssemblyName>TrayRAMBooster_x86</AssemblyName>
+    <AssemblyName>winMemoryOptimizer_x86</AssemblyName>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>  
   <ItemGroup>
@@ -63,7 +63,7 @@
     <PackageReference Include="SergiyE.Common.UI" Version="1.*" />
     <PackageReference Include="Costura.Fody" Version="4.1.0" PrivateAssets="all" />
     <PackageReference Include="Fody">
-      <Version>6.9.2</Version>
+      <Version>6.9.3</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

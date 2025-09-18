@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
   
   internal static class NativeMethods {
     

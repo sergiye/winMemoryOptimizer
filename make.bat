@@ -5,22 +5,22 @@ SET msbuild="%%F"
 )
 ECHO %msbuild%
 
-rem dotnet build TrayRAMBooster.sln /t:Rebuild /p:DebugType=None /p:Configuration=Release
-@%msbuild% TrayRAMBooster.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="Any CPU"
+rem dotnet build winMemoryOptimizer.sln /t:Rebuild /p:DebugType=None /p:Configuration=Release
+@%msbuild% winMemoryOptimizer.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="Any CPU"
 if errorlevel 1 goto error
-@%msbuild% TrayRAMBooster.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU"
+@%msbuild% winMemoryOptimizer.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU"
 if errorlevel 1 goto error
 
 if [%1]==[all]  (
 
-@%msbuild% TrayRAMBooster.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="x64"
+@%msbuild% winMemoryOptimizer.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="x64"
 if errorlevel 1 goto error
-@%msbuild% TrayRAMBooster.sln /t:Rebuild /p:Configuration=Release /p:Platform="x64"
+@%msbuild% winMemoryOptimizer.sln /t:Rebuild /p:Configuration=Release /p:Platform="x64"
 if errorlevel 1 goto error
 
-@%msbuild% TrayRAMBooster.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="x86"
+@%msbuild% winMemoryOptimizer.sln /t:restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform="x86"
 if errorlevel 1 goto error
-@%msbuild% TrayRAMBooster.sln /t:Rebuild /p:Configuration=Release /p:Platform="x86"
+@%msbuild% winMemoryOptimizer.sln /t:Rebuild /p:Configuration=Release /p:Platform="x86"
 if errorlevel 1 goto error
 )
 

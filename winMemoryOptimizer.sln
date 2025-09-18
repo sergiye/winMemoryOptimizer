@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrayRAMBooster", "TrayRAMBooster\TrayRAMBooster.csproj", "{E2873512-EC83-4D38-A4A9-F51F7A5A8391}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "winMemoryOptimizer", "winMemoryOptimizer\winMemoryOptimizer.csproj", "{E2873512-EC83-4D38-A4A9-F51F7A5A8391}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

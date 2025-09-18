@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
   
   internal class ComputerService {
 

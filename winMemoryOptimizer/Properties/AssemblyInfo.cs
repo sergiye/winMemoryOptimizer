@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Tray RAM Booster")]
-[assembly: AssemblyDescription("Tray RAM Booster mini tool for windows")]
+[assembly: AssemblyTitle("WinMemoryOptimizer")]
+[assembly: AssemblyDescription("Windows Memory Optimizer mini tool for windows")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("SergiyE")]
-[assembly: AssemblyProduct("TrayRAMBooster")]
+[assembly: AssemblyProduct("winMemoryOptimizer")]
 [assembly: AssemblyCopyright("Copyright © 2025. Sergiy Egoshin. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -14,4 +14,4 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("E2873512-EC83-4D38-A4A9-F51F7A5A8391")]
 
-[assembly: AssemblyVersion("2.1.*")]
+[assembly: AssemblyVersion("2.2.*")]

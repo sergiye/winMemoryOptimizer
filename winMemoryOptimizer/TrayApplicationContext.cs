@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using sergiye.Common;
 
-namespace TrayRAMBooster {
+namespace winMemoryOptimizer {
   
   internal class TrayApplicationContext : ApplicationContext {
 
@@ -72,8 +72,8 @@ namespace TrayRAMBooster {
               Process.Start(new ProcessStartInfo("resmon.exe") { UseShellExecute = true });
             }
             else {
-              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiConstants.SW_RESTORE);
-              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiConstants.SW_SHOWNORMAL);
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_RESTORE);
+              WinApiHelper.ShowWindowAsync(process.MainWindowHandle, WinApiHelper.SW_SHOWNORMAL);
               WinApiHelper.SetForegroundWindow(process.MainWindowHandle);
             }
             break;
