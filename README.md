@@ -53,6 +53,9 @@ The published version can be obtained from [releases](https://github.com/sergiye
 - `Standby List` Flushes pages from all standby lists to the free list
 - `Standby List (Low Priority)` Flushes pages from the lowest-priority standby list to the free list
 - `System Working Set` Removes memory from the system cache working set
+- `Modified File Cache` Flushes the volume file cache to disk for all fixed drives, ensuring all pending writes are committed
+- `System File Cache` Flushes the cache Windows uses for its system files, trimming it to release memory. Useful for refreshing the system’s state before launching a memory-intensive application
+- `Registry Cache` Flushes registry hives from memory. Hives are logical groups of keys and values that are loaded into memory when the OS starts or a user logs in
 
 <!-- ### Processes excluded from optimization
 - You can build a list of processes to ignore when memory is optimized -->
