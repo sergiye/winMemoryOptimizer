@@ -20,7 +20,8 @@ namespace winMemoryOptimizer {
       ProcessesWorkingSet = 4,
       StandbyList = 8,
       StandbyListLowPriority = 16,
-      SystemWorkingSet = 32
+      SystemWorkingSet = 32,
+      ModifiedFileCache = 64,
     }
     
     public enum MemoryUnit {

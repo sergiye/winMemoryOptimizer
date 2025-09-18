@@ -2,16 +2,19 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace winMemoryOptimizer {
   
   internal class ComputerService {
 
     public static bool HasCombinedPageList => OperatingSystemHelper.IsWindows8OrGreater;
+    public static bool HasModifiedFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasModifiedPageList => OperatingSystemHelper.IsWindowsVistaOrGreater;
     public static bool HasProcessesWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasStandbyList => OperatingSystemHelper.IsWindowsVistaOrGreater;
@@ -188,6 +191,27 @@ namespace winMemoryOptimizer {
         }
       }
 
+      // Optimize Modified File Cache
+      if ((areas & Enums.MemoryAreas.ModifiedFileCache) != 0) {
+        try {
+          if (OnOptimizeProgressUpdate != null) {
+            value++;
+            OnOptimizeProgressUpdate(value, "Modified file cache");
+          }
+
+          stopwatch.Restart();
+
+          OptimizeModifiedFileCache();
+          
+          infoLog.AppendLine(string.Format(infoLogFormat, "Modified file cache", "Optimized",
+            stopwatch.Elapsed.TotalSeconds, "seconds"));
+          runtime = runtime.Add(stopwatch.Elapsed);
+        }
+        catch (Exception e) {
+          errorLog.AppendLine(string.Format(errorLogFormat, "Modified file cache", "Error", e.GetMessage()));
+        }
+      }
+
       if (infoLog.Length > 0) {
         infoLog.Insert(0,
           $"{"Memory areas".ToUpper()} ({runtime.TotalSeconds:0.0} seconds){Environment.NewLine}{Environment.NewLine}");
@@ -244,6 +268,53 @@ namespace winMemoryOptimizer {
         }
         catch (InvalidOperationException) {
           // ignored
+        }
+      }
+    }
+
+    private void OptimizeModifiedFileCache() {
+
+      if (!HasModifiedFileCache)
+        throw new Exception("The Modified File Cache optimization is not supported on this version of the operating system");
+
+      foreach (var drive in DriveInfo.GetDrives()) {
+        if (drive == null || drive.DriveType != DriveType.Fixed || string.IsNullOrWhiteSpace(drive.Name))
+          continue;
+
+        using (var handle = OpenVolumeHandle(drive.Name)) {
+          if (handle == null || handle.IsInvalid)
+            continue;
+
+          if (OperatingSystemHelper.IsWindows7OrGreater) {
+            try {
+              var buffer = Marshal.AllocHGlobal(1);
+              try {
+                if (!NativeMethods.DeviceIoControl(handle, Constants.Windows.Drive.IoControlResetWriteOrder,
+                      buffer, 1, IntPtr.Zero, 0, out _, IntPtr.Zero))
+                  throw new Win32Exception(Marshal.GetLastWin32Error());
+              }
+              finally {
+                Marshal.FreeHGlobal(buffer);
+              }
+            }
+            catch {
+              // ignored
+            }
+
+            if (OperatingSystemHelper.IsWindows8OrGreater) {
+              try {
+                if (!NativeMethods.DeviceIoControl(handle, Constants.Windows.Drive.FsctlDiscardVolumeCache, 
+                      IntPtr.Zero, 0, IntPtr.Zero, 0, out _, IntPtr.Zero))
+                  throw new Win32Exception(Marshal.GetLastWin32Error());
+              }
+              catch {
+                // ignored
+              }
+            }
+          }
+
+          if (!NativeMethods.FlushFileBuffers(handle))
+            throw new Win32Exception(Marshal.GetLastWin32Error());
         }
       }
     }
@@ -373,6 +444,20 @@ namespace winMemoryOptimizer {
       var fileCacheSize = IntPtr.Subtract(IntPtr.Zero, 1); // Flush
       if (!NativeMethods.SetSystemFileCacheSize(fileCacheSize, fileCacheSize, 0))
         throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    private static SafeFileHandle OpenVolumeHandle(string driveLetter) {
+      if (string.IsNullOrWhiteSpace(driveLetter))
+        return null;
+      return NativeMethods.CreateFile(
+        @"\\.\" + driveLetter.TrimEnd(':', '\\') + ":",
+        FileAccess.ReadWrite,
+        FileShare.Read | FileShare.Write,
+        IntPtr.Zero,
+        FileMode.Open,
+        (int) FileAttributes.Normal | Constants.Windows.File.FlagsNoBuffering,
+        IntPtr.Zero
+      );
     }
   }
 }

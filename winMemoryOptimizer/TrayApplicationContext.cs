@@ -214,6 +214,8 @@ namespace winMemoryOptimizer {
       }
       if (!ComputerService.HasSystemWorkingSet)
         Settings.MemoryAreas &= ~Enums.MemoryAreas.SystemWorkingSet;
+      if (!ComputerService.HasModifiedFileCache)
+        Settings.MemoryAreas &= ~Enums.MemoryAreas.ModifiedFileCache;
       return Settings.MemoryAreas;
     }
 
@@ -230,6 +232,8 @@ namespace winMemoryOptimizer {
         result++;
       if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.SystemWorkingSet))
         result++;
+      if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.ModifiedFileCache))
+        result++;
       return result;
     }
 
@@ -245,7 +249,6 @@ namespace winMemoryOptimizer {
             if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyListLowPriority))
               Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyListLowPriority;
             break;
-
           case Enums.MemoryAreas.StandbyListLowPriority:
             if (Settings.MemoryAreas.HasFlag(Enums.MemoryAreas.StandbyList))
               Settings.MemoryAreas &= ~Enums.MemoryAreas.StandbyList;
@@ -509,6 +512,9 @@ namespace winMemoryOptimizer {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
         }) { Tag = Enums.MemoryAreas.StandbyListLowPriority });
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified File Cache", null, (_, _) => {
+          ToggleMemoryArea(Enums.MemoryAreas.ModifiedFileCache);
+        }) { Tag = Enums.MemoryAreas.ModifiedFileCache });
       }
       optimizationTypesMenu.DropDown.Closing += OnContextMenuStripClosing;
       UpdateAreasMenuItems();

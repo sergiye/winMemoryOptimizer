@@ -31,6 +31,15 @@
         public const int MemoryPurgeLowPriorityStandbyList = 5;
         public const int MemoryPurgeStandbyList = 4;
       }
+
+      public static class Drive {
+        public const int FsctlDiscardVolumeCache = 589828; // 0x00090054 - FSCTL_DISCARD_VOLUME_CACHE
+        public const int IoControlResetWriteOrder = 589832; // 0x000900F8 - FSCTL_RESET_WRITE_ORDER
+      }
+
+      public static class File {
+        public const int FlagsNoBuffering = 536870912; // 0x20000000 - FILE_FLAG_NO_BUFFERING
+      }
     }
   }
 }
