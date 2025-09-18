@@ -63,6 +63,32 @@ namespace winMemoryOptimizer {
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct SystemFileCacheInformation32 {
+      public int CurrentSize;
+      public int PeakSize;
+      public int PageFaultCount;
+      public int MinimumWorkingSet;
+      public int MaximumWorkingSet;
+      public int CurrentSizeIncludingTransitionInPages;
+      public int PeakSizeIncludingTransitionInPages;
+      public int TransitionRePurposeCount;
+      public int Flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct SystemFileCacheInformation64 {
+      public long CurrentSize;
+      public long PeakSize;
+      public long PageFaultCount;
+      public long MinimumWorkingSet;
+      public long MaximumWorkingSet;
+      public long CurrentSizeIncludingTransitionInPages;
+      public long PeakSizeIncludingTransitionInPages;
+      public long TransitionRePurposeCount;
+      public long Flags;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct TokenPrivileges {
       public int Count;
       public long Luid;

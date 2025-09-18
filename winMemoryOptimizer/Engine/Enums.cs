@@ -22,6 +22,7 @@ namespace winMemoryOptimizer {
       StandbyListLowPriority = 16,
       SystemWorkingSet = 32,
       ModifiedFileCache = 64,
+      SystemFileCache = 128,
     }
     
     public enum MemoryUnit {

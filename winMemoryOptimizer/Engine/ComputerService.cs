@@ -14,11 +14,12 @@ namespace winMemoryOptimizer {
   internal class ComputerService {
 
     public static bool HasCombinedPageList => OperatingSystemHelper.IsWindows8OrGreater;
-    public static bool HasModifiedFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasModifiedPageList => OperatingSystemHelper.IsWindowsVistaOrGreater;
     public static bool HasProcessesWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
     public static bool HasStandbyList => OperatingSystemHelper.IsWindowsVistaOrGreater;
     public static bool HasSystemWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
+    public static bool HasModifiedFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
+    public static bool HasSystemFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
 
     private WindowsStructs.MemoryStatusEx memoryStatusEx;
 
@@ -191,24 +192,45 @@ namespace winMemoryOptimizer {
         }
       }
 
-      // Optimize Modified File Cache
       if ((areas & Enums.MemoryAreas.ModifiedFileCache) != 0) {
         try {
           if (OnOptimizeProgressUpdate != null) {
             value++;
-            OnOptimizeProgressUpdate(value, "Modified file cache");
+            OnOptimizeProgressUpdate(value, "Modified File Cache");
+          }
+         
+          stopwatch.Restart();
+          
+          OptimizeModifiedFileCache();
+          
+          runtime = runtime.Add(stopwatch.Elapsed);
+
+          infoLog.AppendLine(string.Format(infoLogFormat, "Modified file cache", "Optimized",
+            stopwatch.Elapsed.TotalSeconds, "seconds"));
+        }
+        catch (Exception e) {
+          errorLog.AppendLine(string.Format(errorLogFormat, "Modified file cache", "Error", e.GetMessage()));
+        }
+      }
+
+      if ((areas & Enums.MemoryAreas.SystemFileCache) != 0) {
+        try {
+          if (OnOptimizeProgressUpdate != null) {
+            value++;
+            OnOptimizeProgressUpdate(value, "System File Cache");
           }
 
           stopwatch.Restart();
 
-          OptimizeModifiedFileCache();
-          
-          infoLog.AppendLine(string.Format(infoLogFormat, "Modified file cache", "Optimized",
-            stopwatch.Elapsed.TotalSeconds, "seconds"));
+          OptimizeSystemFileCache();
+
           runtime = runtime.Add(stopwatch.Elapsed);
+
+          infoLog.AppendLine(string.Format(infoLogFormat, "System File Cache", "Optimized",
+            stopwatch.Elapsed.TotalSeconds, "seconds"));
         }
         catch (Exception e) {
-          errorLog.AppendLine(string.Format(errorLogFormat, "Modified file cache", "Error", e.GetMessage()));
+          errorLog.AppendLine(string.Format(errorLogFormat, "System File Cache", "Error", e.GetMessage()));
         }
       }
 
@@ -272,7 +294,7 @@ namespace winMemoryOptimizer {
       }
     }
 
-    private void OptimizeModifiedFileCache() {
+    private static void OptimizeModifiedFileCache() {
 
       if (!HasModifiedFileCache)
         throw new Exception("The Modified File Cache optimization is not supported on this version of the operating system");
@@ -442,6 +464,46 @@ namespace winMemoryOptimizer {
       }
 
       var fileCacheSize = IntPtr.Subtract(IntPtr.Zero, 1); // Flush
+      if (!NativeMethods.SetSystemFileCacheSize(fileCacheSize, fileCacheSize, 0))
+        throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    private static void OptimizeSystemFileCache() {
+      if (!HasSystemFileCache)
+        throw new Exception("The System File Cache optimization is not supported on this version of the operating system");
+
+      if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeIncreaseQuotaName))
+        throw new Exception($"This operation requires administrator privileges ({Constants.Windows.Privilege.SeIncreaseQuotaName})");
+
+      var handle = GCHandle.Alloc(0);
+      try {
+        object systemFileCacheInformation;
+
+        if (OperatingSystemHelper.Is64Bit)
+          systemFileCacheInformation = new WindowsStructs.SystemFileCacheInformation64
+            {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
+        else
+          systemFileCacheInformation = new WindowsStructs.SystemFileCacheInformation32
+            {MinimumWorkingSet = int.MaxValue, MaximumWorkingSet = int.MaxValue};
+
+        handle = GCHandle.Alloc(systemFileCacheInformation, GCHandleType.Pinned);
+
+        if (NativeMethods.NtSetSystemInformation(Constants.Windows.SystemInformationClass.SystemFileCacheInformation,
+              handle.AddrOfPinnedObject(), Marshal.SizeOf(systemFileCacheInformation)) != Constants.Windows.SystemErrorCode.ErrorSuccess)
+          throw new Win32Exception(Marshal.GetLastWin32Error());
+      }
+      finally {
+        try {
+          if (handle.IsAllocated)
+            handle.Free();
+        }
+        catch (InvalidOperationException) {
+          // ignored
+        }
+      }
+
+      var fileCacheSize = IntPtr.Subtract(IntPtr.Zero, 1); // Flush
+
       if (!NativeMethods.SetSystemFileCacheSize(fileCacheSize, fileCacheSize, 0))
         throw new Win32Exception(Marshal.GetLastWin32Error());
     }
