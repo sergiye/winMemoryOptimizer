@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("WinMemoryOptimizer")]
+[assembly: AssemblyTitle("winMemoryOptimizer")]
 [assembly: AssemblyDescription("Windows Memory Optimizer mini tool for windows")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("SergiyE")]
