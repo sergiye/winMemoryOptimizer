@@ -11,7 +11,6 @@ namespace winMemoryOptimizer {
 
     static class RegistryKey {
       public const string Settings = @"SOFTWARE\sergiye\winMemoryOptimizer";
-      public const string OldSettings = @"SOFTWARE\sergiye\TrayRAMBooster";
       public const string ProcessExclusionList = Settings + @"\ProcessExclusionList";
     }
 
@@ -59,9 +58,7 @@ namespace winMemoryOptimizer {
           }
         }
 
-        if (!ReadSettings(RegistryKey.Settings)) {
-          ReadSettings(RegistryKey.OldSettings);
-        }
+        ReadSettings();
       }
       catch (Exception e) {
         Logger.Error(e);
@@ -71,8 +68,8 @@ namespace winMemoryOptimizer {
       }
     }
 
-    private static bool ReadSettings(string settingsPath) {
-      using (var key = Registry.CurrentUser.OpenSubKey(settingsPath)) {
+    private static bool ReadSettings() {
+      using (var key = Registry.CurrentUser.OpenSubKey(RegistryKey.Settings)) {
         if (key == null) return false;
         autoOptimizationInterval = key.Get(RegistryName.AutoOptimizationInterval, autoOptimizationInterval);
         autoOptimizationMemoryUsage = key.Get(RegistryName.AutoOptimizationMemoryUsage, autoOptimizationMemoryUsage);
@@ -192,7 +189,6 @@ namespace winMemoryOptimizer {
 
     public static void Save() {
       try {
-        Registry.CurrentUser.DeleteSubKey(RegistryKey.OldSettings, false);
         Registry.CurrentUser.DeleteSubKey(RegistryKey.Settings, false);
 
         if (ProcessExclusionList.Any()) {
