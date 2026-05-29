@@ -27,9 +27,9 @@ jobs:
       - name: Build
         run: msbuild winMemoryOptimizer.sln -p:Configuration=Release -m
 
-      - name: Publish build
-        uses: actions/upload-artifact@v4
-        with:
-          name: winMemoryOptimizer
-          path: |
-            winMemoryOptimizer/bin
+      # - name: Publish build
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: winMemoryOptimizer
+      #     path: |
+      #       winMemoryOptimizer/bin

@@ -1,7 +1,7 @@
 ﻿namespace winMemoryOptimizer {
-  
+
   internal class Memory {
-    
+
     public void Update(WindowsStructs.MemoryStatusEx memoryStatusEx) {
 
       Physical.Update(memoryStatusEx.AvailPhys, memoryStatusEx.TotalPhys, memoryStatusEx.MemoryLoad);

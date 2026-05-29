@@ -1,7 +1,7 @@
 ﻿namespace winMemoryOptimizer {
 
   internal class MemoryStats {
-  
+
     public void Update(ulong free, ulong total, uint? used = null) {
       Free.Update(free);
       Total.Update(total);

@@ -1,7 +1,7 @@
 ﻿namespace winMemoryOptimizer {
 
   internal class MemorySize {
-  
+
     public void Update(ulong bytes) {
       Bytes = bytes;
       var memory = bytes.ToMemoryUnit();

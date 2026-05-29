@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using sergiye.Common;
 
 namespace winMemoryOptimizer {
-  
+
   internal class TrayApplicationContext : ApplicationContext {
 
     private readonly IContainer components = new Container();
@@ -125,7 +125,7 @@ namespace winMemoryOptimizer {
       else
         action?.Invoke();
     }
-    
+
     private string GetTrayIconText() {
       return Settings.TrayIconMode switch {
         Enums.TrayIconMode.MemoryAvailable => !Settings.ShowVirtualMemory
@@ -351,7 +351,7 @@ namespace winMemoryOptimizer {
 
     private async Task MonitorComputer() {
       SetPriority();
-      var prevUpdateTime = DateTimeOffset.MinValue; 
+      var prevUpdateTime = DateTimeOffset.MinValue;
       while (true) {
         try {
           var now = DateTimeOffset.Now;
@@ -369,7 +369,7 @@ namespace winMemoryOptimizer {
           }
 
           prevUpdateTime = now;
-          
+
           if (GetEnabledMemoryAreas() != Enums.MemoryAreas.None) {
             if (nextAutoOptimizationByInterval != DateTimeOffset.MinValue &&
                 now >= nextAutoOptimizationByInterval) {
@@ -389,7 +389,7 @@ namespace winMemoryOptimizer {
               }
             }
           }
-          
+
           Update(true);
         }
         catch (Exception ex) {
@@ -441,8 +441,8 @@ namespace winMemoryOptimizer {
         Optimize(Enums.OptimizationReason.Manual);
         Update(true);
       });
-    } 
-    
+    }
+
     private void AddMenuItems() {
 
       var menuImage = imageIcon.ToBitmap();
@@ -497,7 +497,7 @@ namespace winMemoryOptimizer {
 
       #region Optimization types
       optimizationTypesMenu = new ToolStripMenuItem("Optimization types");
-      if (ComputerService.HasProcessesWorkingSet) 
+      if (ComputerService.HasProcessesWorkingSet)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Processes working set", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ProcessesWorkingSet);
         }) { Tag = Enums.MemoryAreas.ProcessesWorkingSet });
@@ -509,7 +509,7 @@ namespace winMemoryOptimizer {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Combined page list", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.CombinedPageList);
         }) { Tag = Enums.MemoryAreas.CombinedPageList });
-      if (ComputerService.HasModifiedPageList) 
+      if (ComputerService.HasModifiedPageList)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified page list", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ModifiedPageList);
         }) { Tag = Enums.MemoryAreas.ModifiedPageList });
@@ -618,7 +618,7 @@ namespace winMemoryOptimizer {
       notifyIcon.ContextMenuStrip.Items.Add(statusMenuLabel);
       notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Help") {
         DropDownItems = {
-          new ToolStripMenuItem("Check for updates", null, (_, _) => { 
+          new ToolStripMenuItem("Check for updates", null, (_, _) => {
             if (Updater.CheckForUpdates(Updater.CheckUpdatesMode.AllMessages))
               lastUpdateCheckTime = DateTimeOffset.Now;
           }),
@@ -647,7 +647,7 @@ namespace winMemoryOptimizer {
 
     private void SetOptimizationIntervalType(int interval) {
       Settings.AutoOptimizationInterval = interval;
-      nextAutoOptimizationByInterval = interval == 0 ? DateTimeOffset.MinValue 
+      nextAutoOptimizationByInterval = interval == 0 ? DateTimeOffset.MinValue
         : lastAutoOptimizationByInterval.AddHours(Settings.AutoOptimizationInterval);
       foreach (var subItem in autoOptimizationIntervalMenu.DropDownItems) {
         if (subItem is ToolStripMenuItem subMenuItem)
@@ -675,7 +675,7 @@ namespace winMemoryOptimizer {
         e.Cancel = true;
       }
     }
-    
+
     private string GetStatusText() {
       string text = GetTrayIconText();
       if (lastRun != DateTimeOffset.MinValue) {

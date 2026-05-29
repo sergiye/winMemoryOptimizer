@@ -3,7 +3,7 @@
 namespace winMemoryOptimizer {
 
   internal static class Enums {
-    
+
     [Flags]
     public enum LogLevels {
       Debug = 1,
@@ -11,7 +11,7 @@ namespace winMemoryOptimizer {
       Warning = 4,
       Error = 8
     }
-    
+
     [Flags]
     public enum MemoryAreas {
       None = 0,
@@ -25,7 +25,7 @@ namespace winMemoryOptimizer {
       SystemFileCache = 128,
       RegistryCache = 256,
     }
-    
+
     public enum MemoryUnit {
       B,
       KB,

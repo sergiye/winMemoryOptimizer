@@ -4,9 +4,9 @@ using System.Runtime.CompilerServices;
 using sergiye.Common;
 
 namespace winMemoryOptimizer {
-  
+
   internal static class Logger {
-    
+
     private static readonly Enums.LogLevels level = Enums.LogLevels.Debug | Enums.LogLevels.Information |
                                                      Enums.LogLevels.Warning | Enums.LogLevels.Error;
 

@@ -10,17 +10,17 @@ using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 namespace winMemoryOptimizer {
-  
+
   internal class ComputerService {
 
-    public static bool HasCombinedPageList => OperatingSystemHelper.IsWindows8OrGreater;
-    public static bool HasModifiedPageList => OperatingSystemHelper.IsWindowsVistaOrGreater;
-    public static bool HasProcessesWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
-    public static bool HasStandbyList => OperatingSystemHelper.IsWindowsVistaOrGreater;
-    public static bool HasSystemWorkingSet => OperatingSystemHelper.IsWindowsXpOrGreater;
-    public static bool HasModifiedFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
-    public static bool HasSystemFileCache => OperatingSystemHelper.IsWindowsXpOrGreater;
-    public static bool HasRegistryCache => OperatingSystemHelper.IsWindows81OrGreater;
+    public static bool HasCombinedPageList => OSHelper.IsWindows8OrGreater;
+    public static bool HasModifiedPageList => OSHelper.IsWindowsVistaOrGreater;
+    public static bool HasProcessesWorkingSet => OSHelper.IsWindowsXpOrGreater;
+    public static bool HasStandbyList => OSHelper.IsWindowsVistaOrGreater;
+    public static bool HasSystemWorkingSet => OSHelper.IsWindowsXpOrGreater;
+    public static bool HasModifiedFileCache => OSHelper.IsWindowsXpOrGreater;
+    public static bool HasSystemFileCache => OSHelper.IsWindowsXpOrGreater;
+    public static bool HasRegistryCache => OSHelper.IsWindows81OrGreater;
 
     private WindowsStructs.MemoryStatusEx memoryStatusEx;
 
@@ -45,7 +45,7 @@ namespace winMemoryOptimizer {
       }
       return false;
     }
-    
+
     public event Action<byte, string> OnOptimizeProgressUpdate;
 
     private static bool SetIncreasePrivilege(string privilegeName) {
@@ -199,11 +199,11 @@ namespace winMemoryOptimizer {
             value++;
             OnOptimizeProgressUpdate(value, "Modified File Cache");
           }
-         
+
           stopwatch.Restart();
-          
+
           OptimizeModifiedFileCache();
-          
+
           runtime = runtime.Add(stopwatch.Elapsed);
 
           infoLog.AppendLine(string.Format(infoLogFormat, "Modified file cache", "Optimized",
@@ -329,7 +329,7 @@ namespace winMemoryOptimizer {
           if (handle == null || handle.IsInvalid)
             continue;
 
-          if (OperatingSystemHelper.IsWindows7OrGreater) {
+          if (OSHelper.IsWindows7OrGreater) {
             try {
               var buffer = Marshal.AllocHGlobal(1);
               try {
@@ -345,9 +345,9 @@ namespace winMemoryOptimizer {
               // ignored
             }
 
-            if (OperatingSystemHelper.IsWindows8OrGreater) {
+            if (OSHelper.IsWindows8OrGreater) {
               try {
-                if (!NativeMethods.DeviceIoControl(handle, Constants.Windows.Drive.FsctlDiscardVolumeCache, 
+                if (!NativeMethods.DeviceIoControl(handle, Constants.Windows.Drive.FsctlDiscardVolumeCache,
                       IntPtr.Zero, 0, IntPtr.Zero, 0, out _, IntPtr.Zero))
                   throw new Win32Exception(Marshal.GetLastWin32Error());
               }
@@ -462,7 +462,7 @@ namespace winMemoryOptimizer {
       var handle = GCHandle.Alloc(0);
       try {
         object systemCacheInformation;
-        if (OperatingSystemHelper.Is64Bit)
+        if (OSHelper.Is64Bit)
           systemCacheInformation = new WindowsStructs.SystemCacheInformation64
             {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
         else
@@ -501,7 +501,7 @@ namespace winMemoryOptimizer {
       try {
         object systemFileCacheInformation;
 
-        if (OperatingSystemHelper.Is64Bit)
+        if (OSHelper.Is64Bit)
           systemFileCacheInformation = new WindowsStructs.SystemFileCacheInformation64
             {MinimumWorkingSet = -1L, MaximumWorkingSet = -1L};
         else

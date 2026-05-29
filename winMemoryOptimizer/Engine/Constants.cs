@@ -1,7 +1,7 @@
 ﻿namespace winMemoryOptimizer {
-  
+
   internal static class Constants {
-    
+
     public static class Windows {
       public static class Privilege {
         public const string SeDebugName = "SeDebugPrivilege"; // Required to debug and adjust the memory of a process owned by another account. User Right: Debug programs.

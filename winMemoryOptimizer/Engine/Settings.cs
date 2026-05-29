@@ -41,12 +41,12 @@ namespace winMemoryOptimizer {
     private static bool autoUpdateApp;
 
     static Settings() {
-      memoryAreas = Enums.MemoryAreas.ModifiedPageList 
-                  | Enums.MemoryAreas.ProcessesWorkingSet 
-                  | Enums.MemoryAreas.StandbyListLowPriority 
+      memoryAreas = Enums.MemoryAreas.ModifiedPageList
+                  | Enums.MemoryAreas.ProcessesWorkingSet
+                  | Enums.MemoryAreas.StandbyListLowPriority
                   | Enums.MemoryAreas.SystemWorkingSet;
       ProcessExclusionList = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-      trayIconValueColor = WinApiHelper.IsTaskbarDark() 
+      trayIconValueColor = WinApiHelper.IsTaskbarDark()
         ? Color.Lime //Cyan / SpringGreen
         : Color.DarkGreen; //Teal / Green
 
@@ -85,7 +85,7 @@ namespace winMemoryOptimizer {
         return true;
       }
     }
-    
+
     public static int AutoOptimizationInterval {
       get => autoOptimizationInterval;
       set {
