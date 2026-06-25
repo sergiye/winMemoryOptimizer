@@ -156,7 +156,7 @@ namespace winMemoryOptimizer {
 
     private void UpdateIcon(bool force = false) {
 
-      string newIconValue = Settings.TrayIconMode switch {
+      var newIconValue = Settings.TrayIconMode switch {
         Enums.TrayIconMode.MemoryAvailable => computer.Memory.Physical.Free.Value.ToTrayValue(),
         Enums.TrayIconMode.MemoryUsageValue => computer.Memory.Physical.Used.Value.ToTrayValue(),
         _ => $"{computer.Memory.Physical.Used.Percentage:0}",
@@ -677,7 +677,7 @@ namespace winMemoryOptimizer {
     }
 
     private string GetStatusText() {
-      string text = GetTrayIconText();
+      var text = GetTrayIconText();
       if (lastRun != DateTimeOffset.MinValue) {
         text += $"\nLast run: {lastRun:G}";
       }
@@ -690,7 +690,7 @@ namespace winMemoryOptimizer {
     private void UpdateStatusMenuItem(bool force) {
 
       if (!force && !statusMenuLabel.Visible) return;
-      string iconText = GetStatusText();
+      var iconText = GetStatusText();
       if (iconText != statusInfoMenuLabel.Text)
         statusInfoMenuLabel.Text = iconText;
     }

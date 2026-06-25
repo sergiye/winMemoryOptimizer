@@ -2,7 +2,7 @@
 
 namespace winMemoryOptimizer {
 
-  internal static class Enums {
+  public static class Enums {
 
     [Flags]
     public enum LogLevels {

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace winMemoryOptimizer {
 
-  internal static class WindowsStructs {
+  public static class WindowsStructs {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MemoryCombineInformationEx {
       public IntPtr Handle;
