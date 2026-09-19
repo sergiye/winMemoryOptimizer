@@ -20,6 +20,14 @@ namespace winMemoryOptimizer {
       return new string(value.ToCharArray().Where(c => !char.IsWhiteSpace(c)).ToArray());
     }
 
+    public static string ToDisplayText(this Enums.OptimizationReason value) {
+      return value switch {
+        Enums.OptimizationReason.Scheduled => "Scheduled",
+        Enums.OptimizationReason.Usage => "Low free memory",
+        _ => "Manual",
+      };
+    }
+
     public static KeyValuePair<double, Enums.MemoryUnit> ToMemoryUnit(this ulong value) {
       if (value < 1024)
         return new KeyValuePair<double, Enums.MemoryUnit>(value, Enums.MemoryUnit.B);

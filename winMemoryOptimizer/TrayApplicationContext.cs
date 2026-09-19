@@ -421,7 +421,7 @@ namespace winMemoryOptimizer {
           var virtualReleased = (computer.Memory.Virtual.Free.Bytes > tempVirtualAvailable
             ? computer.Memory.Virtual.Free.Bytes - tempVirtualAvailable
             : tempVirtualAvailable - computer.Memory.Virtual.Free.Bytes).ToMemoryUnit();
-          var message = $"Reason: {reason}\nPhysical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
+          var message = $"Reason: {reason.ToDisplayText()}\nPhysical: {physicalReleased.Key:0.#} {physicalReleased.Value}";
           if (Settings.ShowVirtualMemory)
             message += $"\nVirtual: {virtualReleased.Key:0.#} {virtualReleased.Value}";
           notifyIcon.ShowBalloonTip(5000, "Memory optimized", message, ToolTipIcon.Info);
@@ -483,7 +483,7 @@ namespace winMemoryOptimizer {
       autoOptimizationIntervalMenu.DropDown.Closing += OnContextMenuStripClosing;
       SetOptimizationIntervalType(Settings.AutoOptimizationInterval);
 
-      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize if free below") {
+      autoOptimizeUsageMenu = new ToolStripMenuItem("Optimize when free memory below") {
         DropDownItems = {
           new ToolStripMenuItem("Never", null, (_, _) => { SetOptimizationUsage(0); }),
         }
@@ -520,13 +520,13 @@ namespace winMemoryOptimizer {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
         }) { Tag = Enums.MemoryAreas.StandbyListLowPriority });
-        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified File Cache", null, (_, _) => {
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified file cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ModifiedFileCache);
         }) { Tag = Enums.MemoryAreas.ModifiedFileCache });
-        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System File Cache", null, (_, _) => {
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System file cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.SystemFileCache);
         }) { Tag = Enums.MemoryAreas.SystemFileCache });
-        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Registry Cache", null, (_, _) => {
+        optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Registry cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.RegistryCache);
         }) { Tag = Enums.MemoryAreas.RegistryCache });
       }
@@ -582,7 +582,7 @@ namespace winMemoryOptimizer {
       iconTypeMenu.DropDown.Closing += OnContextMenuStripClosing;
       SetIconType(Settings.TrayIconMode);
 
-      iconDoubleClickMenu = new ToolStripMenuItem("Icon double click action") {
+      iconDoubleClickMenu = new ToolStripMenuItem("Icon double-click action") {
         DropDownItems = {
           new ToolStripMenuItem("Nothing", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.None); }),
           new ToolStripMenuItem("Optimize", null, (_, _) => { SetIconDoubleClickAction(Enums.DoubleClickAction.Optimize); }),
@@ -622,7 +622,7 @@ namespace winMemoryOptimizer {
             if (Updater.CheckForUpdates(Updater.CheckUpdatesMode.AllMessages))
               lastUpdateCheckTime = DateTimeOffset.Now;
           }),
-          new ToolStripMenuItem("Site", null, (_, _) => { Updater.VisitAppSite(); }),
+          new ToolStripMenuItem("Website", null, (_, _) => { Updater.VisitAppSite(); }),
           new ToolStripMenuItem("About", null, (_, _) => { Updater.ShowAbout(); }),
         }
       });

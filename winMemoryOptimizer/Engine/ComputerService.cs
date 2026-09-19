@@ -76,7 +76,7 @@ namespace winMemoryOptimizer {
       var errorLog = new StringBuilder();
       const string errorLogFormat = "{0} ({1}: {2})";
       var infoLog = new StringBuilder();
-      infoLog.AppendLine($"Optimization start reason: {reason}");
+      infoLog.AppendLine($"Optimization start reason: {reason.ToDisplayText()}");
       const string infoLogFormat = "{0} ({1}) ({2:0.0} {3})";
       var runtime = TimeSpan.Zero;
       var stopwatch = new Stopwatch();
@@ -206,11 +206,11 @@ namespace winMemoryOptimizer {
 
           runtime = runtime.Add(stopwatch.Elapsed);
 
-          infoLog.AppendLine(string.Format(infoLogFormat, "Modified file cache", "Optimized",
+          infoLog.AppendLine(string.Format(infoLogFormat, "Modified File Cache", "Optimized",
             stopwatch.Elapsed.TotalSeconds, "seconds"));
         }
         catch (Exception e) {
-          errorLog.AppendLine(string.Format(errorLogFormat, "Modified file cache", "Error", e.GetMessage()));
+          errorLog.AppendLine(string.Format(errorLogFormat, "Modified File Cache", "Error", e.GetMessage()));
         }
       }
 
@@ -319,7 +319,7 @@ namespace winMemoryOptimizer {
     private static void OptimizeModifiedFileCache() {
 
       if (!HasModifiedFileCache)
-        throw new Exception("The Modified File Cache optimization is not supported on this version of the operating system");
+        throw new Exception("The Modified File Cache optimization is not supported on this operating system version");
 
       foreach (var drive in DriveInfo.GetDrives()) {
         if (drive == null || drive.DriveType != DriveType.Fixed || string.IsNullOrWhiteSpace(drive.Name))
@@ -492,7 +492,7 @@ namespace winMemoryOptimizer {
 
     private static void OptimizeSystemFileCache() {
       if (!HasSystemFileCache)
-        throw new Exception("The System File Cache optimization is not supported on this version of the operating system");
+        throw new Exception("The System File Cache optimization is not supported on this operating system version");
 
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeIncreaseQuotaName))
         throw new Exception($"This operation requires administrator privileges ({Constants.Windows.Privilege.SeIncreaseQuotaName})");
@@ -532,7 +532,7 @@ namespace winMemoryOptimizer {
 
     private void OptimizeRegistryCache() {
       if (!HasRegistryCache)
-        throw new Exception("The Registry Cache optimization is not supported on this version of the operating system");
+        throw new Exception("The Registry Cache optimization is not supported on this operating system version");
 
       if (NativeMethods.NtSetSystemInformation(Constants.Windows.SystemInformationClass.SystemRegistryReconciliationInformation, IntPtr.Zero, 0) != Constants.Windows.SystemErrorCode.ErrorSuccess)
         throw new Win32Exception(Marshal.GetLastWin32Error());

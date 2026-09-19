@@ -98,7 +98,7 @@ namespace winMemoryOptimizer {
           // ignored
         }
 
-        Event($"Can not save the LOG: {message} (Exception: {e.GetMessage()})", EventLogEntryType.Error);
+        Event($"Cannot save log entry: {message} (Exception: {e.GetMessage()})", EventLogEntryType.Error);
       }
     }
 
