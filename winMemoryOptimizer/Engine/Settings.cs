@@ -189,7 +189,7 @@ namespace winMemoryOptimizer {
 
     public static void Save() {
       try {
-        Registry.CurrentUser.DeleteSubKey(RegistryKey.Settings, false);
+        Registry.CurrentUser.DeleteSubKeyTree(RegistryKey.Settings, false);
 
         if (ProcessExclusionList.Any()) {
           using (var key = Registry.CurrentUser.CreateSubKey(RegistryKey.ProcessExclusionList)) {
