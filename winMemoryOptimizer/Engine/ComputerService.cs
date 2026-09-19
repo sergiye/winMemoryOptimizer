@@ -295,7 +295,7 @@ namespace winMemoryOptimizer {
         throw new Exception(string.Format("This operation requires administrator privileges ({0})",
           Constants.Windows.Privilege.SeProfSingleProcessName));
 
-      var handle = GCHandle.Alloc(0);
+      var handle = default(GCHandle);
       try {
         var memoryCombineInformationEx = new WindowsStructs.MemoryCombineInformationEx();
         handle = GCHandle.Alloc(memoryCombineInformationEx, GCHandleType.Pinned);
@@ -459,7 +459,7 @@ namespace winMemoryOptimizer {
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeIncreaseQuotaName))
         throw new Exception($"This operation requires administrator privileges ({Constants.Windows.Privilege.SeIncreaseQuotaName})");
 
-      var handle = GCHandle.Alloc(0);
+      var handle = default(GCHandle);
       try {
         object systemCacheInformation;
         if (OSHelper.Is64Bit)
@@ -497,7 +497,7 @@ namespace winMemoryOptimizer {
       if (!SetIncreasePrivilege(Constants.Windows.Privilege.SeIncreaseQuotaName))
         throw new Exception($"This operation requires administrator privileges ({Constants.Windows.Privilege.SeIncreaseQuotaName})");
 
-      var handle = GCHandle.Alloc(0);
+      var handle = default(GCHandle);
       try {
         object systemFileCacheInformation;
 
