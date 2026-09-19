@@ -520,16 +520,19 @@ namespace winMemoryOptimizer {
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Standby list (low priority)", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.StandbyListLowPriority);
         }) { Tag = Enums.MemoryAreas.StandbyListLowPriority });
+      }
+      if (ComputerService.HasModifiedFileCache)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Modified file cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.ModifiedFileCache);
         }) { Tag = Enums.MemoryAreas.ModifiedFileCache });
+      if (ComputerService.HasSystemFileCache)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("System file cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.SystemFileCache);
         }) { Tag = Enums.MemoryAreas.SystemFileCache });
+      if (ComputerService.HasRegistryCache)
         optimizationTypesMenu.DropDownItems.Add(new ToolStripMenuItem("Registry cache", null, (_, _) => {
           ToggleMemoryArea(Enums.MemoryAreas.RegistryCache);
         }) { Tag = Enums.MemoryAreas.RegistryCache });
-      }
       optimizationTypesMenu.DropDown.Closing += OnContextMenuStripClosing;
       UpdateAreasMenuItems();
       #endregion
